@@ -1,4 +1,4 @@
-package http
+package rhttp
 
 type Result struct {
 	Code int

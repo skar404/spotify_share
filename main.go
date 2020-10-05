@@ -32,6 +32,12 @@ func main() {
 
 	q := codeUrlParse.Query()
 	code := q.Get("code")
-	
-	c.GetAccessOrRefreshToken(code)
+
+	r, err := c.GetAccessOrRefreshToken(code)
+
+	fmt.Println("GetAccessOrRefreshToken:", r.AccessToken, r.RefreshToken, err)
+
+	rf, err := c.RefreshToken(r)
+
+	fmt.Println("RefreshToken:", rf.AccessToken, err)
 }

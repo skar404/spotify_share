@@ -1,16 +1,16 @@
 package spotify
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 
-	"github.com/skar404/spotify_share/http"
+	"github.com/skar404/spotify_share/rhttp"
 )
 
 type Config struct {
-	http.ApiClient
-	AuthorizationClient http.ApiClient
+	// FIXME возможно нужно разбить на 2 клиента
+	rhttp.ApiClient
+	AuthorizationClient rhttp.ApiClient
 
 	clientId     string
 	clientSecret string
@@ -33,10 +33,10 @@ func Init(id string, secret string, redirectUri string, scope []string) (Config,
 	}
 
 	return Config{
-		ApiClient: http.ApiClient{
+		ApiClient: rhttp.ApiClient{
 			Url: "https://api.spotify.com/",
 		},
-		AuthorizationClient: http.ApiClient{
+		AuthorizationClient: rhttp.ApiClient{
 			Url: "https://accounts.spotify.com/api/token",
 			Header: map[string][]string{
 				"Content-Type": {"application/x-www-form-urlencoded"},
@@ -73,17 +73,36 @@ func (c *Config) GetAuthorizationUrl(state string) string {
 	return c.AuthorizationUrl.String()
 }
 
-func (c *Config) GetAccessOrRefreshToken(code string) {
+func (c *Config) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error) {
+	var r TokenOrRefreshReq
+	var err error
+
 	body := url.Values{
 		"code":          {code},
-		"scope":         {code},
+		"scope":         {c.OAuthScope},
 		"redirect_uri":  {c.RedirectUri},
 		"client_id":     {c.clientId},
 		"client_secret": {c.clientSecret},
 		"grant_type":    {"authorization_code"},
 	}
 
-	r, _ := c.AuthorizationClient.HttpClient("POST", "", nil, body, nil, nil)
+	_, err = c.AuthorizationClient.HttpClient("POST", "", nil, body, &r, nil)
+	return r, err
+}
 
-	fmt.Println(r)
+func (c *Config) RefreshToken(token TokenOrRefreshReq) (TokenReq, error) {
+	var r TokenReq
+	var err error
+
+	body := url.Values{
+		"scope":         {c.OAuthScope},
+		"refresh_token": {token.RefreshToken},
+		"client_id":     {c.clientId},
+		"client_secret": {c.clientSecret},
+		"grant_type":    {"refresh_token"},
+	}
+
+	_, err = c.AuthorizationClient.HttpClient("POST", "", nil, body, &r, nil)
+
+	return r, err
 }
