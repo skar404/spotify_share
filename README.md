@@ -33,3 +33,8 @@ flowchart TB
     
     bot -- "HTTP API (Bot Token)" --> tg 
 ```
+
+```mermaid
+flowchart TB
+   A --> B
+```
