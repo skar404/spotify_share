@@ -7,3 +7,29 @@ Telegram bot in share link play in you spotify
 - App dashboard: https://developer.spotify.com/dashboard/applications/
 - OAuth: https://developer.spotify.com/documentation/general/guides/authorization-guide/
 - Get the User's Currently Playing Track: https://developer.spotify.com/documentation/web-api/reference/player/get-the-users-currently-playing-track/
+
+## Schema architecture app 
+
+```mermaid
+flowchart TB
+    client[client]
+    tg[Telegram] 
+
+    spotify[Spotify]
+    
+    subgraph pn["Private network"]
+    bot[BotApp]
+    db[(MongoDB)]
+    end
+    tr[Treafic]
+    
+    client --> tg
+    tg -- "TLS Web hook" --> tr
+    tr --> bot
+    db <--> bot
+
+    spotify -- "TLS OAuth" --> tr
+    bot -- "HTTP API" --> spotify
+    
+    bot -- "HTTP API (Bot Token)" --> tg 
+```
