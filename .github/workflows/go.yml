@@ -1,0 +1,17 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Update docs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Compile Mermaid Markdown
+      uses: neenjaw/compile-mermaid-markdown-action@0.2.4
+
