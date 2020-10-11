@@ -44,7 +44,7 @@ jobs:
           git status
           git add .
           git status
-          git commit -m "Add changes"
+          git commit -m "Auto: update mermaid code"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
