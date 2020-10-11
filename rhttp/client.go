@@ -21,8 +21,8 @@ func (c *ApiClient) getUrl(uri string) string {
 	return c.Url + uri
 }
 
-func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResultByte, error) {
-	var r ResultByte
+func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseByte, error) {
+	var r ResponseByte
 
 	var body io.Reader
 
@@ -75,23 +75,24 @@ func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[strin
 	return r, nil
 }
 
-func (c *ApiClient) RowHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResultRaw, error) {
-	var r ResultRaw
+func (c *ApiClient) RowHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseRaw, error) {
+	var r ResponseRaw
 
 	bodyBytes, err := c.byteHttpClient(method, uri, jsonBody, urlValues, header)
 	if err != nil {
 		return r, err
 	}
 
-	r = ResultRaw{
-		Result: r.Result,
-		Body:   string(bodyBytes.Body),
+	r = ResponseRaw{
+		Response: r.Response,
+		Body:     string(bodyBytes.Body),
 	}
+
 	return r, nil
 }
 
-func (c *ApiClient) HttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, object interface{}, header http.Header) (ResultJson, error) {
-	var r ResultJson
+func (c *ApiClient) HttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, object interface{}, header http.Header) (ResponseJson, error) {
+	var r ResponseJson
 
 	if header == nil {
 		header = http.Header{}
@@ -103,7 +104,7 @@ func (c *ApiClient) HttpClient(method string, uri string, jsonBody map[string]in
 	}
 
 	r.Raw = string(bodyBytes.Body)
-	r.Result = bodyBytes.Result
+	r.Response = bodyBytes.Response
 	err = json.Unmarshal(bodyBytes.Body, &object)
 	r.Body = &object
 	if err != nil {

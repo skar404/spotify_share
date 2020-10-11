@@ -1,22 +1,22 @@
 package rhttp
 
-type Result struct {
+type Response struct {
 	Code int
 	Url  string
 }
 
-type ResultByte struct {
-	Result
+type ResponseByte struct {
+	Response
 	Body []byte
 }
 
-type ResultRaw struct {
-	Result
+type ResponseRaw struct {
+	Response
 	Body string
 }
 
-type ResultJson struct {
-	Result
+type ResponseJson struct {
+	Response
 	Body interface{}
 	Raw  string
 }
