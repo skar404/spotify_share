@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/skar404/spotify_share/rhttp"
 )
@@ -59,4 +60,17 @@ func (c *Config) SetWebHook(hookUrl string, maxConn int) error {
 
 	_, err := c.HttpClient("POST", "setWebhook", jsonBody, nil, nil, nil)
 	return err
+}
+
+func (c *Config) GetUpdates(offSet int) (GetUpdate, error) {
+
+	jsonBody := make(map[string]interface{})
+	if offSet != 0 {
+		jsonBody["offset"] = strconv.Itoa(offSet)
+	}
+
+	resUpdate := GetUpdate{}
+	_, err := c.HttpClient("POST", "getUpdates", jsonBody, nil, &resUpdate, nil)
+
+	return resUpdate, err
 }

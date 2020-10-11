@@ -10,10 +10,7 @@ import (
 	"github.com/skar404/spotify_share/spotify"
 )
 
-func CreateToken() (string, string, error) {
-	clientId := os.Getenv("CLIENT_ID")
-	clientSecret := os.Getenv("CLIENT_SECRET")
-
+func CreateToken(clientId, clientSecret string) (string, string, error) {
 	c, _ := spotify.Init(clientId, clientSecret, "http://localhost/spotify", []string{
 		"user-read-recently-played",
 		"user-read-currently-playing",
@@ -45,11 +42,3 @@ func CreateToken() (string, string, error) {
 
 	return rf.AccessToken, r.RefreshToken, nil
 }
-
-//token, refreshToken, err := commands.CreateToken()
-//if err != nil {
-//	_ = fmt.Errorf("Error create token")
-//	return
-//}
-//
-//fmt.Println("token", token, refreshToken)
