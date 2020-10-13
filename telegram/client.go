@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/skar404/spotify_share/rhttp"
 )
@@ -13,10 +14,16 @@ type Config struct {
 	Token string
 }
 
+var TgClient Config
+
 func Init(token string) (Config, error) {
 	return Config{
 		ApiClient: rhttp.ApiClient{
 			Url: fmt.Sprintf("https://api.telegram.org/bot%s/", token),
+			Header: map[string][]string{
+				"Content-Type": {"application/json"},
+			},
+			Timeout: 1 * time.Minute,
 		},
 	}, nil
 }
@@ -67,10 +74,10 @@ func (c *Config) GetUpdates(offSet int) (GetUpdate, error) {
 	jsonBody := make(map[string]interface{})
 	if offSet != 0 {
 		jsonBody["offset"] = strconv.Itoa(offSet)
+		jsonBody["timeout"] = 30
 	}
 
 	resUpdate := GetUpdate{}
 	_, err := c.HttpClient("POST", "getUpdates", jsonBody, nil, &resUpdate, nil)
-
 	return resUpdate, err
 }

@@ -58,7 +58,7 @@ func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[strin
 	}
 
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: c.Timeout,
 	}
 
 	resp, err := client.Do(req)

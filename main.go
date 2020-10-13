@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
+	stdLog "log"
+	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 
 	"github.com/skar404/spotify_share/bot"
 	"github.com/skar404/spotify_share/commands"
@@ -15,6 +18,7 @@ import (
 )
 
 func main() {
+	initStopSignal()
 	// App env
 	webhookToken := os.Getenv("TELEGRAM_WEBHOOK_TOKEN")
 	telegramToken := os.Getenv("TELEGRAM_TOKEN")
@@ -24,13 +28,41 @@ func main() {
 
 	appMode := os.Getenv("APP_MOD")
 
+	InitGlobal(telegramToken)
+
+	lockChanel := make(chan bool)
 	if appMode == "CLI" {
 		runCLI(clientId, clientSecret)
 	} else if appMode == "WEB" {
-		runHttpServer(webhookToken)
+		// set webhook
 	} else if appMode == "GET_UPDATES" {
-		runGetUpdate(telegramToken)
+		// only dev mode:
+		// ... run `for true` and lock web server
+		go func() {
+			log.Info("create goroutines")
+			runGetUpdate(telegramToken)
+			lockChanel <- true
+		}()
 	}
+	runHttpServer(webhookToken)
+
+	<-lockChanel
+}
+
+func InitGlobal(telegramToken string) {
+	telegram.TgClient, _ = telegram.Init(telegramToken)
+
+}
+
+func initStopSignal() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			log.Infof("stop apps sig=%v", sig)
+			os.Exit(1)
+		}
+	}()
 }
 
 func runCLI(clientId, clientSecret string) {
@@ -44,14 +76,14 @@ func runCLI(clientId, clientSecret string) {
 }
 
 func runGetUpdate(telegramToken string) {
-	tg, _ := telegram.Init(telegramToken)
+	tg := &telegram.TgClient
 
 	updateId := 0
 	for true {
 		raw, err := tg.GetUpdates(updateId)
 
 		if err != nil {
-			log.Println(err)
+			stdLog.Println(err)
 			continue
 		}
 
@@ -60,19 +92,27 @@ func runGetUpdate(telegramToken string) {
 				continue
 			}
 
-			fmt.Println(fmt.Sprintf("send message: %s", item.Message.Text))
+			bot.CommandHandler(&item)
 			updateId = item.UpdateId + 1
 		}
 	}
 }
 
+func OAuthSpotify(c echo.Context) error {
+	// Redirect Spotify to app
+	// - validate oauth
+	// - get token
+	// - redirect to bot
+	return c.Redirect(http.StatusMovedPermanently, "https://t.me/spotify_share_bot?start=token")
+}
+
 func runHttpServer(webhookToken string) {
 	e := echo.New()
-
 	// Enable metrics middleware
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 	// Middleware
+	e.Logger.SetLevel(log.INFO)
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -81,7 +121,10 @@ func runHttpServer(webhookToken string) {
 		fmt.Sprintf("/api/telegram/webhook/%s", webhookToken),
 		bot.Router,
 	)
+	e.GET(
+		"/oauth",
+		OAuthSpotify,
+	)
 
-	// Start server
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
 }
