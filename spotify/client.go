@@ -25,7 +25,7 @@ type Config struct {
 	userToken string
 }
 
-func Init(id string, secret string, redirectUri string, scope []string) (Config, error) {
+func Init(id, secret, redirectUri string, scope []string) (Config, error) {
 	urlAuthorization, err := url.Parse("https://accounts.spotify.com/authorize")
 
 	if err != nil {

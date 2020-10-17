@@ -28,14 +28,19 @@ func Init(token string) (Config, error) {
 	}, nil
 }
 
-func (c *Config) SendMessage(chatId int, text string) error {
+func (c *Config) SendMessage(chatId int, text string, replyMarkup interface{}) error {
 	jsonBody := map[string]interface{}{
 		"chat_id":    chatId,
 		"text":       text,
 		"parse_mode": "Markdown",
+		"reply_markup": map[string]interface{}{"inline_keyboard": [][]map[string]string{{{
+			"text": "Войти через Spotify",
+			"url":  "https://accounts.spotify.com/",
+		}}}},
 	}
 
-	_, err := c.HttpClient("POST", "sendMessage", jsonBody, nil, nil, nil)
+	r, err := c.HttpClient("POST", "sendMessage", jsonBody, nil, nil, nil)
+	_ = r
 	return err
 }
 

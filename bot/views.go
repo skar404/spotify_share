@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/gommon/log"
 
+	"github.com/skar404/spotify_share/spotify"
 	"github.com/skar404/spotify_share/telegram"
 )
 
@@ -45,10 +46,19 @@ func CommandHandler(update *telegram.Update) {
 		return
 	}
 
+	spotifyClient, _ := spotify.Init("test", "test", "test", []string{"test"})
+
 	m := ""
+	rm := telegram.InlineKeyboardReq{}
+
 	switch command.Name {
 	case "start":
 		m = TemplateMessageStart
+		rm.InlineKeyboard = append(rm.InlineKeyboard, telegram.InlineKeyboardButtonReq{
+			Text: "Войти через Spotify",
+			Url:  spotifyClient.GetAuthorizationUrl("test"),
+		})
+
 		if len(command.Args) > 0 {
 			// TODO валиддация OAuth,
 			//    Args[0] - код авторизовался пользователь или нет
@@ -63,5 +73,5 @@ func CommandHandler(update *telegram.Update) {
 		return
 	}
 
-	_ = telegram.TgClient.SendMessage(update.Message.Chat.Id, m)
+	_ = telegram.TgClient.SendMessage(update.Message.Chat.Id, m, rm)
 }
