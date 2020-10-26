@@ -14,19 +14,20 @@ import (
 
 	"github.com/skar404/spotify_share/bot"
 	"github.com/skar404/spotify_share/commands"
+	"github.com/skar404/spotify_share/global"
 	"github.com/skar404/spotify_share/telegram"
 )
 
 func main() {
 	initStopSignal()
 	// App env
-	webhookToken := os.Getenv("TELEGRAM_WEBHOOK_TOKEN")
-	telegramToken := os.Getenv("TELEGRAM_TOKEN")
+	webhookToken := global.WebhookToken
+	telegramToken := global.TelegramToken
 
 	clientId := os.Getenv("CLIENT_ID")
 	clientSecret := os.Getenv("CLIENT_SECRET")
 
-	appMode := os.Getenv("APP_MOD")
+	appMode := global.AppMode
 
 	InitGlobal(telegramToken)
 

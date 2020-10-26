@@ -28,15 +28,15 @@ func Init(token string) (Config, error) {
 	}, nil
 }
 
-func (c *Config) SendMessage(chatId int, text string, replyMarkup interface{}) error {
+func (c *Config) SendMessage(chatId int, text string, replyMarkup InlineKeyboardReq) error {
 	jsonBody := map[string]interface{}{
 		"chat_id":    chatId,
 		"text":       text,
 		"parse_mode": "Markdown",
-		"reply_markup": map[string]interface{}{"inline_keyboard": [][]map[string]string{{{
-			"text": "Войти через Spotify",
-			"url":  "https://accounts.spotify.com/",
-		}}}},
+	}
+
+	if replyMarkup.ready == true {
+		jsonBody["reply_markup"] = replyMarkup
 	}
 
 	r, err := c.HttpClient("POST", "sendMessage", jsonBody, nil, nil, nil)

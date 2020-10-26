@@ -49,15 +49,17 @@ func CommandHandler(update *telegram.Update) {
 	spotifyClient, _ := spotify.Init("test", "test", "test", []string{"test"})
 
 	m := ""
-	rm := telegram.InlineKeyboardReq{}
+	var rm telegram.InlineKeyboardReq
 
 	switch command.Name {
 	case "start":
 		m = TemplateMessageStart
-		rm.InlineKeyboard = append(rm.InlineKeyboard, telegram.InlineKeyboardButtonReq{
+
+		rm.InlineKeyboard = [][]telegram.InlineKeyboardButtonReq{{{
 			Text: "Войти через Spotify",
 			Url:  spotifyClient.GetAuthorizationUrl("test"),
-		})
+		}}}
+		rm.Ready()
 
 		if len(command.Args) > 0 {
 			// TODO валиддация OAuth,

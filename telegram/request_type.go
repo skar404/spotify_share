@@ -12,5 +12,11 @@ type InlineKeyboardButtonReq struct {
 }
 
 type InlineKeyboardReq struct {
-	InlineKeyboard []InlineKeyboardButtonReq `json:"inline_keyboard"`
+	ready bool
+
+	InlineKeyboard [][]InlineKeyboardButtonReq `json:"inline_keyboard"`
+}
+
+func (s *InlineKeyboardReq) Ready() {
+	s.ready = true
 }
