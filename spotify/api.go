@@ -1,6 +1,10 @@
 package spotify
 
-import "github.com/skar404/spotify_share/rhttp"
+import (
+	"fmt"
+
+	"github.com/skar404/spotify_share/rhttp"
+)
 
 type api struct {
 	rhttp.ApiClient
@@ -13,13 +17,25 @@ var ApiClient = InitApi()
 func InitApi() api {
 	return api{
 		ApiClient: rhttp.ApiClient{
-			Url: "https://api.spotify.com/",
+			Url:    "https://api.spotify.com/",
+			Header: map[string][]string{},
 		},
 	}
 }
 
-func (s *api) SetUserToken(token string) api {
-	s.userToken = token
+func (c *api) SetUserToken(token string) api {
+	c.userToken = token
 
-	return *s
+	c.ApiClient.Header.Add("authorization", fmt.Sprintf("Bearer %s", token))
+	return *c
+}
+
+func (c *api) GetPlayNow() rhttp.ResponseJson {
+	r, _ := c.HttpClient("GET", "v1/me/player/currently-playing", nil, nil, nil, nil)
+	return r
+}
+
+func (c *api) GetHistory() rhttp.ResponseJson {
+	r, _ := c.HttpClient("GET", "v1/me/player/recently-played", nil, nil, nil, nil)
+	return r
 }

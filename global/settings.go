@@ -15,6 +15,15 @@ var (
 		"streaming"}
 	ClientId     = os.Getenv("CLIENT_ID")
 	ClientSecret = os.Getenv("CLIENT_SECRET")
+	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost/spotify")
 
 	AppMode = os.Getenv("APP_MOD")
 )
+
+func getEnv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
+}

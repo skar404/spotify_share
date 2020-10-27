@@ -24,7 +24,7 @@ type OAuth struct {
 	userToken string
 }
 
-var OAuthClient = InitOAuth
+var OAuthClient = InitOAuth()
 
 func InitOAuth() OAuth {
 	urlAuthorization, _ := url.Parse("https://accounts.spotify.com/authorize")
@@ -43,6 +43,53 @@ func InitOAuth() OAuth {
 		AccessTokenUrl:   "https://accounts.spotify.com/api/token",
 		OAuthScope:       strings.Join(global.AppSpotifyScope, " "),
 		clientSecret:     global.ClientSecret,
+		RedirectUri:      global.RedirectUri,
 		clientId:         global.ClientId,
 	}
+}
+
+func (c *OAuth) GetOAthUrl(state string) string {
+	q := c.AuthorizationUrl.Query()
+
+	q.Set("client_id", c.clientId)
+	q.Set("response_type", "code")
+	q.Set("redirect_uri", c.RedirectUri)
+	q.Set("scope", c.OAuthScope)
+	q.Set("state", state)
+	c.AuthorizationUrl.RawQuery = q.Encode()
+	return c.AuthorizationUrl.String()
+}
+
+func (c *OAuth) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error) {
+	var r TokenOrRefreshReq
+	var err error
+
+	body := url.Values{
+		"code":          {code},
+		"scope":         {c.OAuthScope},
+		"redirect_uri":  {c.RedirectUri},
+		"client_id":     {c.clientId},
+		"client_secret": {c.clientSecret},
+		"grant_type":    {"authorization_code"},
+	}
+
+	_, err = c.HttpClient("POST", "", nil, body, &r, nil)
+	return r, err
+}
+
+func (c *OAuth) RefreshToken(token TokenOrRefreshReq) (TokenReq, error) {
+	var r TokenReq
+	var err error
+
+	body := url.Values{
+		"scope":         {c.OAuthScope},
+		"refresh_token": {token.RefreshToken},
+		"client_id":     {c.clientId},
+		"client_secret": {c.clientSecret},
+		"grant_type":    {"refresh_token"},
+	}
+
+	_, err = c.HttpClient("POST", "", nil, body, &r, nil)
+
+	return r, err
 }

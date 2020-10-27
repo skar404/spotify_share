@@ -11,13 +11,17 @@ import (
 )
 
 func CreateToken(clientId, clientSecret string) (string, string, error) {
-	c, _ := spotify.Init(clientId, clientSecret, "http://localhost/spotify", []string{
-		"user-read-recently-played",
-		"user-read-currently-playing",
-		"app-remote-control",
-		"streaming"})
 
-	urlOAuth := c.GetAuthorizationUrl("session_id")
+	urlOAuth := spotify.OAuthClient.GetOAthUrl("session_id")
+
+	//
+	//c, _ := spotify.Init(clientId, clientSecret, "http://localhost/spotify", []string{
+	//	"user-read-recently-played",
+	//	"user-read-currently-playing",
+	//	"app-remote-control",
+	//	"streaming"})
+
+	//urlOAuth := c.GetAuthorizationUrl("session_id")
 
 	fmt.Println(urlOAuth)
 	fmt.Print("Enter text: ")
@@ -30,15 +34,20 @@ func CreateToken(clientId, clientSecret string) (string, string, error) {
 	q := codeUrlParse.Query()
 	code := q.Get("code")
 
-	r, err := c.GetAccessOrRefreshToken(code)
+	r, err := spotify.OAuthClient.GetAccessOrRefreshToken(code)
 	if err != nil {
 		return "", "", err
 	}
 
-	rf, err := c.RefreshToken(r)
+	rf, err := spotify.OAuthClient.RefreshToken(r)
 	if err != nil {
 		return "", "", err
 	}
+
+	api := spotify.ApiClient.SetUserToken(rf.AccessToken)
+
+	a := api.GetPlayNow()
+	_ = a
 
 	return rf.AccessToken, r.RefreshToken, nil
 }

@@ -45,9 +45,12 @@ func main() {
 			lockChanel <- true
 		}()
 	}
-	runHttpServer(webhookToken)
 
-	<-lockChanel
+	if appMode != "CLI" {
+		runHttpServer(webhookToken)
+
+		<-lockChanel
+	}
 }
 
 func InitGlobal(telegramToken string) {
