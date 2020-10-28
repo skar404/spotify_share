@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/skar404/spotify_share/rhttp"
+	"github.com/skar404/spotify_share/spotify/type"
 )
 
 type Config struct {
@@ -73,8 +74,8 @@ func (c *Config) GetAuthorizationUrl(state string) string {
 	return c.AuthorizationUrl.String()
 }
 
-func (c *Config) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error) {
-	var r TokenOrRefreshReq
+func (c *Config) GetAccessOrRefreshToken(code string) (spotify_type.TokenOrRefreshReq, error) {
+	var r spotify_type.TokenOrRefreshReq
 	var err error
 
 	body := url.Values{
@@ -90,8 +91,8 @@ func (c *Config) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error)
 	return r, err
 }
 
-func (c *Config) RefreshToken(token TokenOrRefreshReq) (TokenReq, error) {
-	var r TokenReq
+func (c *Config) RefreshToken(token spotify_type.TokenOrRefreshReq) (spotify_type.TokenReq, error) {
+	var r spotify_type.TokenReq
 	var err error
 
 	body := url.Values{

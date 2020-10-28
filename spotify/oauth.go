@@ -6,6 +6,7 @@ import (
 
 	"github.com/skar404/spotify_share/global"
 	"github.com/skar404/spotify_share/rhttp"
+	"github.com/skar404/spotify_share/spotify/type"
 )
 
 type OAuth struct {
@@ -60,8 +61,8 @@ func (c *OAuth) GetOAthUrl(state string) string {
 	return c.AuthorizationUrl.String()
 }
 
-func (c *OAuth) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error) {
-	var r TokenOrRefreshReq
+func (c *OAuth) GetAccessOrRefreshToken(code string) (spotify_type.TokenOrRefreshReq, error) {
+	var r spotify_type.TokenOrRefreshReq
 	var err error
 
 	body := url.Values{
@@ -77,8 +78,8 @@ func (c *OAuth) GetAccessOrRefreshToken(code string) (TokenOrRefreshReq, error) 
 	return r, err
 }
 
-func (c *OAuth) RefreshToken(token TokenOrRefreshReq) (TokenReq, error) {
-	var r TokenReq
+func (c *OAuth) RefreshToken(token spotify_type.TokenOrRefreshReq) (spotify_type.TokenReq, error) {
+	var r spotify_type.TokenReq
 	var err error
 
 	body := url.Values{
@@ -90,6 +91,5 @@ func (c *OAuth) RefreshToken(token TokenOrRefreshReq) (TokenReq, error) {
 	}
 
 	_, err = c.HttpClient("POST", "", nil, body, &r, nil)
-
 	return r, err
 }

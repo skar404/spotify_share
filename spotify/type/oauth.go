@@ -1,4 +1,4 @@
-package spotify
+package spotify_type
 
 import "github.com/skar404/spotify_share/rhttp"
 
