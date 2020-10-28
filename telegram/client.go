@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/skar404/spotify_share/global"
 	"github.com/skar404/spotify_share/rhttp"
 )
 
@@ -14,9 +15,10 @@ type Config struct {
 	Token string
 }
 
-var TgClient Config
+var TgClient = Init()
 
-func Init(token string) (Config, error) {
+func Init() Config {
+	token := global.TelegramToken
 	return Config{
 		ApiClient: rhttp.ApiClient{
 			Url: fmt.Sprintf("https://api.telegram.org/bot%s/", token),
@@ -25,7 +27,7 @@ func Init(token string) (Config, error) {
 			},
 			Timeout: 1 * time.Minute,
 		},
-	}, nil
+	}
 }
 
 func (c *Config) SendMessage(chatId int, text string, replyMarkup InlineKeyboardReq) error {

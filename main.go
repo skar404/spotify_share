@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	stdLog "log"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/skar404/spotify_share/bot"
 	"github.com/skar404/spotify_share/commands"
@@ -29,7 +33,16 @@ func main() {
 
 	appMode := global.AppMode
 
-	InitGlobal(telegramToken)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Connect(ctx)
+
+	err = client.Ping(ctx, nil)
+	log.Fatal(err)
 
 	lockChanel := make(chan bool)
 	if appMode == "CLI" {
@@ -48,14 +61,8 @@ func main() {
 
 	if appMode != "CLI" {
 		runHttpServer(webhookToken)
-
 		<-lockChanel
 	}
-}
-
-func InitGlobal(telegramToken string) {
-	telegram.TgClient, _ = telegram.Init(telegramToken)
-
 }
 
 func initStopSignal() {

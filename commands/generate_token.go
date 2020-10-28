@@ -46,7 +46,7 @@ func CreateToken(clientId, clientSecret string) (string, string, error) {
 
 	api := spotify.ApiClient.SetUserToken(rf.AccessToken)
 
-	a := api.GetPlayNow()
+	a, _ := api.GetPlayNow()
 	_ = a
 
 	return rf.AccessToken, r.RefreshToken, nil
