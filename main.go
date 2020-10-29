@@ -1,24 +1,21 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	stdLog "log"
-	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/mgo.v2"
 
 	"github.com/skar404/spotify_share/bot"
 	"github.com/skar404/spotify_share/commands"
 	"github.com/skar404/spotify_share/global"
+	"github.com/skar404/spotify_share/handler"
 	"github.com/skar404/spotify_share/telegram"
 )
 
@@ -33,16 +30,14 @@ func main() {
 
 	appMode := global.AppMode
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	// Database connection
+	db, err := mgo.Dial("localhost")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.Connect(ctx)
 
-	err = client.Ping(ctx, nil)
-	log.Fatal(err)
+	// Initialize handler
+	h := &handler.Handler{DB: db}
 
 	lockChanel := make(chan bool)
 	if appMode == "CLI" {
@@ -60,7 +55,7 @@ func main() {
 	}
 
 	if appMode != "CLI" {
-		runHttpServer(webhookToken)
+		runHttpServer(webhookToken, *h)
 		<-lockChanel
 	}
 }
@@ -109,15 +104,7 @@ func runGetUpdate(telegramToken string) {
 	}
 }
 
-func OAuthSpotify(c echo.Context) error {
-	// Redirect Spotify to app
-	// - validate oauth
-	// - get token
-	// - redirect to bot
-	return c.Redirect(http.StatusMovedPermanently, "https://t.me/spotify_share_bot?start=token")
-}
-
-func runHttpServer(webhookToken string) {
+func runHttpServer(webhookToken string, handler handler.Handler) {
 	e := echo.New()
 	// Enable metrics middleware
 	p := prometheus.NewPrometheus("echo", nil)
@@ -132,10 +119,7 @@ func runHttpServer(webhookToken string) {
 		fmt.Sprintf("/api/telegram/webhook/%s", webhookToken),
 		bot.Router,
 	)
-	e.GET(
-		"/oauth",
-		OAuthSpotify,
-	)
+	e.GET("/oauth", handler.OAuthSpotify)
 
 	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
 }
