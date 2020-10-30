@@ -6,21 +6,27 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+type Spotify struct {
+	Token struct {
+		Refresh string `json:"refresh" bson:"refresh"`
+		User    string `json:"user" bson:"user"`
+	} `json:"token,omitempty" bson:"token,omitempty"`
+}
+
+type Telegram struct {
+	Id    int64  `json:"id,omitempty" bson:"id,omitempty"`
+	Login string `json:"login" bson:"login"`
+}
+
 type User struct {
 	Id bson.ObjectId `json:"id" bson:"_id,omitempty"`
 
-	Telegram struct {
-		Id    int64  `json:"id,omitempty" bson:"id,omitempty"`
-		Login string `json:"login" bson:"login"`
-	} `json:"telegram,omitempty" bson:"telegram,omitempty"`
+	Telegram Telegram `json:"telegram,omitempty" bson:"telegram,omitempty"`
 
-	Spotify struct {
-		Token struct {
-			Refresh string `json:"refresh" bson:"refresh"`
-			User    string `json:"user" bson:"user"`
-		} `json:"token,omitempty" bson:"token,omitempty"`
-	} `json:"spotify,omitempty" bson:"spotify,omitempty"`
+	Spotify Spotify `json:"spotify,omitempty" bson:"spotify,omitempty"`
 
 	CreateAt time.Time `json:"create_at,omitempty" bson:"create_at,omitempty"`
 	UpdateAt time.Time `json:"update_at,omitempty" bson:"update_at,omitempty"`
+
+	Active bool `json:"active,omitempty" bson:"active,omitempty"`
 }

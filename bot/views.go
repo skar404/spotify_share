@@ -2,9 +2,15 @@ package bot
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/labstack/gommon/log"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
+	"github.com/skar404/spotify_share/handler"
+	_ "github.com/skar404/spotify_share/handler"
+	"github.com/skar404/spotify_share/model"
 	"github.com/skar404/spotify_share/spotify"
 	"github.com/skar404/spotify_share/telegram"
 )
@@ -19,7 +25,48 @@ type FakeUser struct {
 	Block  bool
 }
 
-func CommandHandler(update *telegram.Update) {
+func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.User, error) {
+	var err error
+	db := handler.DB.Clone()
+	defer db.Close()
+
+	u := &model.User{Id: bson.NewObjectId()}
+
+	err = db.DB("bot_db").C("users").Find(bson.M{"telegram.id": update.Message.From.Id}).One(u)
+	if err == nil {
+		return u, nil
+	}
+
+	if err != mgo.ErrNotFound {
+		return u, err
+	}
+
+	u = &model.User{
+		Id: bson.NewObjectId(),
+
+		Telegram: model.Telegram{
+			Id:    update.Message.From.Id,
+			Login: update.Message.From.Username,
+		},
+		Spotify:  model.Spotify{},
+		CreateAt: time.Now(),
+		UpdateAt: time.Now(),
+		Active:   true,
+	}
+	err = db.DB("bot_db").C("users").Insert(u)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}
+
+func CommandHandler(update *telegram.Update, handler *handler.Handler) {
+
+	user, err := GetOrCreateUser(update, handler)
+	if err != nil {
+		return
+	}
+
 	log.Infof("send message: %s", update.Message.Text)
 
 	command, err := getCommand(update.Message.Text)
@@ -28,18 +75,6 @@ func CommandHandler(update *telegram.Update) {
 		return
 	}
 	// TODO добавить получиния пользователя из базы
-	user := FakeUser{
-		Uuid:         "MongoDB uuid",
-		TelegramId:   1234,
-		Token:        "spotify token",
-		RefreshToken: "spotify refresh token",
-		Active:       true,
-		Block:        false,
-	}
-
-	if user.Block == true {
-		return
-	}
 
 	if user.Active == false {
 		// TODO go to start

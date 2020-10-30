@@ -31,7 +31,7 @@ func main() {
 	appMode := global.AppMode
 
 	// Database connection
-	db, err := mgo.Dial("localhost")
+	db, err := mgo.Dial("root:example@localhost")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,13 +49,13 @@ func main() {
 		// ... run `for true` and lock web server
 		go func() {
 			log.Info("create goroutines")
-			runGetUpdate(telegramToken)
+			runGetUpdate(telegramToken, h)
 			lockChanel <- true
 		}()
 	}
 
 	if appMode != "CLI" {
-		runHttpServer(webhookToken, *h)
+		runHttpServer(webhookToken, h)
 		<-lockChanel
 	}
 }
@@ -81,7 +81,7 @@ func runCLI(clientId, clientSecret string) {
 	fmt.Println("token", token, refreshToken)
 }
 
-func runGetUpdate(telegramToken string) {
+func runGetUpdate(telegramToken string, h *handler.Handler) {
 	tg := &telegram.TgClient
 
 	updateId := 0
@@ -98,13 +98,13 @@ func runGetUpdate(telegramToken string) {
 				continue
 			}
 
-			bot.CommandHandler(&item)
+			bot.CommandHandler(&item, h)
 			updateId = item.UpdateId + 1
 		}
 	}
 }
 
-func runHttpServer(webhookToken string, handler handler.Handler) {
+func runHttpServer(webhookToken string, handler *handler.Handler) {
 	e := echo.New()
 	// Enable metrics middleware
 	p := prometheus.NewPrometheus("echo", nil)
