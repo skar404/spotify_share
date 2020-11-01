@@ -11,10 +11,8 @@ import (
 )
 
 func CreateToken(clientId, clientSecret string) (string, string, error) {
-
 	urlOAuth := spotify.OAuthClient.GetOAthUrl("session_id")
 
-	//
 	//c, _ := spotify.Init(clientId, clientSecret, "http://localhost/spotify", []string{
 	//	"user-read-recently-played",
 	//	"user-read-currently-playing",
