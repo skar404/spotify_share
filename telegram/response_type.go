@@ -31,7 +31,7 @@ type ChatPermissions struct {
 }
 
 type Chat struct {
-	Id          int       `json:"id"`
+	Id          int64     `json:"id"`
 	Type        string    `json:"type"`
 	Title       string    `json:"title"`
 	Username    string    `json:"username"`

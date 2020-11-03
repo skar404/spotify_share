@@ -15,11 +15,12 @@ var (
 		"streaming"}
 	ClientId     = os.Getenv("CLIENT_ID")
 	ClientSecret = os.Getenv("CLIENT_SECRET")
-	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost/spotify")
+	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost:1323/spotify")
 
 	AppMode = os.Getenv("APP_MOD")
 
-	JWTToken = []byte(getEnv("JWT_TOKEN", "TEST_TOKEN"))
+	JWTToken     = getEnv("JWT_TOKEN", "TEST_TOKEN")
+	JWTTokenByte = []byte(JWTToken)
 )
 
 func getEnv(key, fallback string) string {

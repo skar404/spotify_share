@@ -119,7 +119,7 @@ func runHttpServer(webhookToken string, handler *handler.Handler) {
 		fmt.Sprintf("/api/telegram/webhook/%s", webhookToken),
 		bot.Router,
 	)
-	e.GET("/oauth", handler.OAuthSpotify)
+	e.GET("/spotify", handler.OAuthSpotify)
 
 	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
 }

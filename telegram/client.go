@@ -30,14 +30,14 @@ func Init() Config {
 	}
 }
 
-func (c *Config) SendMessage(chatId int, text string, replyMarkup InlineKeyboardReq) error {
+func (c *Config) SendMessage(chatId int64, text string, replyMarkup *InlineKeyboardReq) error {
 	jsonBody := map[string]interface{}{
 		"chat_id":    chatId,
 		"text":       text,
 		"parse_mode": "Markdown",
 	}
 
-	if replyMarkup.ready == true {
+	if replyMarkup != nil && replyMarkup.ready == true {
 		jsonBody["reply_markup"] = replyMarkup
 	}
 
