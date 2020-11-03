@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/gommon/log"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/skar404/spotify_share/global"
 	"github.com/skar404/spotify_share/handler"
 	_ "github.com/skar404/spotify_share/handler"
 	"github.com/skar404/spotify_share/model"
@@ -23,6 +25,11 @@ type FakeUser struct {
 
 	Active bool
 	Block  bool
+}
+
+type JWTUser struct {
+	UserId int64 `json:"user_id,omitempty"`
+	jwt.StandardClaims
 }
 
 func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.User, error) {
@@ -60,6 +67,30 @@ func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.
 	return u, nil
 }
 
+func createJWTToken(userId int64) string {
+	mySigningKey := global.JWTToken
+
+	date := time.Now()
+	date.Add(30 * time.Minute)
+
+	claims := JWTUser{
+		userId,
+		jwt.StandardClaims{
+			ExpiresAt: date.Unix(),
+			Issuer:    "login_bot",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, err := token.SignedString(mySigningKey)
+
+	if err != nil {
+		// fix fatal
+		log.Fatal(err)
+	}
+	return ss
+}
+
 func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 
 	user, err := GetOrCreateUser(update, handler)
@@ -81,18 +112,16 @@ func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 		return
 	}
 
-	spotifyClient, _ := spotify.Init("test", "test", "test", []string{"test"})
-
 	m := ""
 	var rm telegram.InlineKeyboardReq
 
 	switch command.Name {
 	case "start":
 		m = TemplateMessageStart
-
+		url := spotify.OAuthClient.GetOAthUrl(createJWTToken(user.Telegram.Id))
 		rm.InlineKeyboard = [][]telegram.InlineKeyboardButtonReq{{{
 			Text: "Войти через Spotify",
-			Url:  spotifyClient.GetAuthorizationUrl("test"),
+			Url:  url,
 		}}}
 		rm.Ready()
 

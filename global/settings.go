@@ -18,6 +18,8 @@ var (
 	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost/spotify")
 
 	AppMode = os.Getenv("APP_MOD")
+
+	JWTToken = []byte(getEnv("JWT_TOKEN", "TEST_TOKEN"))
 )
 
 func getEnv(key, fallback string) string {
