@@ -3,6 +3,14 @@ package bot
 import (
 	"errors"
 	"strings"
+	"time"
+
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/skar404/spotify_share/handler"
+	"github.com/skar404/spotify_share/model"
+	"github.com/skar404/spotify_share/telegram"
 )
 
 var WarningMessageNotCommand = errors.New("message not command")
@@ -25,4 +33,35 @@ func getCommand(m string) (Command, error) {
 	c.Args = mSplit[1:]
 
 	return c, nil
+}
+
+func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.User, error) {
+	conn := model.Conn{
+		DB: handler.DB,
+	}
+	user, err := conn.GetUser(update.Message.From.Id)
+	if err == nil {
+		return user, nil
+	} else if err != mgo.ErrNotFound {
+		return nil, err
+	}
+
+	u := &model.User{
+		Id: bson.NewObjectId(),
+
+		Telegram: model.Telegram{
+			Id:    update.Message.From.Id,
+			Login: update.Message.From.Username,
+		},
+		Spotify:  model.Spotify{},
+		CreateAt: time.Now(),
+		UpdateAt: time.Now(),
+		Active:   true,
+	}
+	u, err = conn.CreateUser(u)
+
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
