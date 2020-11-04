@@ -98,7 +98,7 @@ func runGetUpdate(telegramToken string, h *handler.Handler) {
 				continue
 			}
 
-			bot.CommandHandler(&item, h)
+			bot.BotRouter(&item, h)
 			updateId = item.UpdateId + 1
 		}
 	}

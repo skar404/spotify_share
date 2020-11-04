@@ -78,13 +78,13 @@ func (c *OAuth) GetAccessOrRefreshToken(code string) (spotify_type.TokenOrRefres
 	return r, err
 }
 
-func (c *OAuth) RefreshToken(token spotify_type.TokenOrRefreshReq) (spotify_type.TokenReq, error) {
+func (c *OAuth) RefreshToken(token string) (spotify_type.TokenReq, error) {
 	var r spotify_type.TokenReq
 	var err error
 
 	body := url.Values{
 		"scope":         {c.OAuthScope},
-		"refresh_token": {token.RefreshToken},
+		"refresh_token": {token},
 		"client_id":     {c.clientId},
 		"client_secret": {c.clientSecret},
 		"grant_type":    {"refresh_token"},

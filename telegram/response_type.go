@@ -66,12 +66,30 @@ type Message struct {
 	Text                 string   `json:"text"`
 }
 
+type Location struct {
+	Longitude            float64 `json:"longitude"`
+	Latitude             float64 `json:"latitude"`
+	HorizontalAccuracy   float64 `json:"horizontal_accuracy"`
+	LivePeriod           int64   `json:"live_period"`
+	Heading              int64   `json:"heading"`
+	ProximityAlertRadius int64   `json:"proximity_alert_radius"`
+}
+
+type InlineQuery struct {
+	Id       string   `json:"id"`
+	From     User     `json:"from"`
+	Location Location `json:"location"`
+	Query    string   `json:"query"`
+	Offset   string   `json:"offset"`
+}
+
 type Update struct {
-	UpdateId          int     `json:"update_id"`
-	Message           Message `json:"message"`
-	EditedMessage     Message `json:"edited_message"`
-	ChannelPost       Message `json:"channel_post"`
-	EditedChannelPost Message `json:"edited_channel_post"`
+	UpdateId          int         `json:"update_id"`
+	Message           Message     `json:"message"`
+	EditedMessage     Message     `json:"edited_message"`
+	ChannelPost       Message     `json:"channel_post"`
+	EditedChannelPost Message     `json:"edited_channel_post"`
+	InlineQuery       InlineQuery `json:"inline_query"`
 }
 
 type GetUpdate struct {

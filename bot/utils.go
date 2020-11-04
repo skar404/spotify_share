@@ -14,32 +14,37 @@ import (
 )
 
 var WarningMessageNotCommand = errors.New("message not command")
+var NotValidUser = errors.New("user not found in telegram")
 
 func isCommand(m string) bool {
-	if m[0] == '/' && len(m[1:]) > 0 {
+	if len(m) > 0 && m[0] == '/' && len(m[1:]) > 0 {
 		return true
 	}
 	return false
 }
 
-func getCommand(m string) (Command, error) {
+func getCommand(m string) (*Command, error) {
 	c := Command{}
 	if !isCommand(m) {
-		return c, WarningMessageNotCommand
+		return nil, WarningMessageNotCommand
 	}
 
 	mSplit := strings.Split(m, " ")
 	c.Name = mSplit[0][1:]
 	c.Args = mSplit[1:]
 
-	return c, nil
+	return &c, nil
 }
 
-func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.User, error) {
+func GetOrCreateUser(tgUser *telegram.User, handler *handler.Handler) (*model.User, error) {
+	if tgUser.Id == 0 {
+		return nil, NotValidUser
+	}
+
 	conn := model.Conn{
 		DB: handler.DB,
 	}
-	user, err := conn.GetUser(update.Message.From.Id)
+	user, err := conn.GetUser(tgUser.Id)
 	if err == nil {
 		return user, nil
 	} else if err != mgo.ErrNotFound {
@@ -50,8 +55,8 @@ func GetOrCreateUser(update *telegram.Update, handler *handler.Handler) (*model.
 		Id: bson.NewObjectId(),
 
 		Telegram: model.Telegram{
-			Id:    update.Message.From.Id,
-			Login: update.Message.From.Username,
+			Id:    tgUser.Id,
+			Login: tgUser.Username,
 		},
 		Spotify:  model.Spotify{},
 		CreateAt: time.Now(),

@@ -76,8 +76,7 @@ func (c *Config) SetWebHook(hookUrl string, maxConn int) error {
 	return err
 }
 
-func (c *Config) GetUpdates(offSet int) (GetUpdate, error) {
-
+func (c *Config) GetUpdates(offSet int) (*GetUpdate, error) {
 	jsonBody := make(map[string]interface{})
 	if offSet != 0 {
 		jsonBody["offset"] = strconv.Itoa(offSet)
@@ -85,6 +84,35 @@ func (c *Config) GetUpdates(offSet int) (GetUpdate, error) {
 	}
 
 	resUpdate := GetUpdate{}
-	_, err := c.HttpClient("POST", "getUpdates", jsonBody, nil, &resUpdate, nil)
-	return resUpdate, err
+	r, err := c.HttpClient("POST", "getUpdates", jsonBody, nil, &resUpdate, nil)
+	_ = r
+	return &resUpdate, err
+}
+
+func (c *Config) AnswerInlineQuery(Id string, tmpList []interface{}) error {
+
+	jsonBody := make(map[string]interface{})
+
+	jsonBody["inline_query_id"] = Id
+	jsonBody["cache_time"] = 0
+	jsonBody["results"] = tmpList
+	//jsonBody["results"] = []interface{}{
+	//	map[string]interface{}{
+	//		"type":        "article",
+	//		"id":          "SUPER_JWT_ID",
+	//		"title":       "Send Audio 1",
+	//		"is_personal": true,
+	//		"description": fmt.Sprintf("APPS %s", Id),
+	//		"input_message_content": map[string]interface{}{
+	//			"message_text": "test",
+	//			"parse_mode":   "Markdown",
+	//		},
+	//		"thumb_url": fmt.Sprintf("https://thiscatdoesnotexist.com/?id=%s", Id),
+	//	},
+	//}
+
+	resUpdate := GetUpdate{}
+	r, err := c.HttpClient("POST", "answerInlineQuery", jsonBody, nil, &resUpdate, nil)
+	_ = r
+	return err
 }

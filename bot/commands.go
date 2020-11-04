@@ -10,9 +10,9 @@ import (
 )
 
 type CommandContext struct {
-	update  telegram.Update
-	user    model.User
-	command Command
+	update  *telegram.Update
+	user    *model.User
+	command *Command
 }
 
 func (c *CommandContext) StartCommand() {
@@ -27,8 +27,6 @@ func (c *CommandContext) StartCommand() {
 	rm.Ready()
 
 	if len(c.command.Args) > 0 {
-		// TODO валиддация OAuth,
-		//    Args[0] - код авторизовался пользователь или нет
 		m = fmt.Sprintf(TemplateMessageLogin, "@spotify_share_bot")
 	}
 	_ = telegram.TgClient.SendMessage(c.update.Message.Chat.Id, m, &rm)

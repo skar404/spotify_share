@@ -37,7 +37,7 @@ func CreateToken(clientId, clientSecret string) (string, string, error) {
 		return "", "", err
 	}
 
-	rf, err := spotify.OAuthClient.RefreshToken(r)
+	rf, err := spotify.OAuthClient.RefreshToken(r.RefreshToken)
 	if err != nil {
 		return "", "", err
 	}
