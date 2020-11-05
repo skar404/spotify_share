@@ -46,25 +46,64 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	if err != nil {
 		return
 	}
+	var tmpList []interface{}
+
 	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
 	api := spotify.ApiClient.SetUserToken(token.AccessToken)
 	r, _ := api.GetHistory()
+	playNow, err := api.GetPlayNow()
 
-	var tmpList []interface{}
+	if err == nil {
+		tmpList = append(tmpList, map[string]interface{}{
+			"type":  "photo",
+			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"title": playNow.Item.Name,
+			"description": fmt.Sprintf("%s",
+				playNow.Item.Artists[0].Name),
+			"is_personal": true,
+			//"input_message_content": map[string]interface{}{
+			//	"message_text": fmt.Sprintf("test ![img](%s)", playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL),
+			//	"parse_mode":   "Markdown",
+			//},
+			"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***\ndebug info: inline ID=%s",
+				playNow.Item.Name,
+				playNow.Item.Artists[0].Name,
+				playNow.Item.Album.Name,
+				update.InlineQuery.Id),
+			"parse_mode": "Markdown",
+			"photo_url":  playNow.Item.Album.Images[0].URL,
+			"reply_markup": map[string]interface{}{
+				"inline_keyboard": [][]map[string]interface{}{{{
+					"text":          "Play in Spotify",
+					"callback_data": "https://google.com",
+				}}},
+			},
+			"thumb_url": playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL,
+		})
+	}
+
 	for _, value := range r.Items {
 		tmpList = append(tmpList, map[string]interface{}{
-			"type":  "article",
-			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-			"title": value.Track.Name,
-			"description": fmt.Sprintf("%s\n%s\nInline ID=%s",
+			"type":        "photo",
+			"id":          fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"title":       value.Track.Name,
+			"description": fmt.Sprintf("%s"),
+			"caption": fmt.Sprintf("%s\n%s\nInline ID=%s",
 				value.Track.Artists[0].Name,
 				value.Track.Album.Name,
 				update.InlineQuery.Id),
 			"is_personal": true,
-			"input_message_content": map[string]interface{}{
-				"message_text": "test",
-				"parse_mode":   "Markdown",
+			"photo_url":   value.Track.Album.Images[0].URL,
+			//"input_message_content": map[string]interface{}{
+			//	"message_text": "test",
+			//	"parse_mode":   "Markdown",
+			"parse_mode": "Markdown",
+			"reply_markup": map[string]interface{}{
+				"inline_keyboard": [][]map[string]interface{}{{{
+					"text":          "Play in Spotify",
+					"callback_data": "https://google.com",
+				}}},
 			},
 			"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
 		})
