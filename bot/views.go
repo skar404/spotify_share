@@ -24,15 +24,33 @@ type FakeUser struct {
 }
 
 func BotRouter(update *telegram.Update, handler *handler.Handler) {
+
+	// FIXME mey be create struct
 	if update.Message.MessageId != 0 {
 		CommandHandler(update, handler)
 	} else if update.InlineQuery.Id != "" {
 		InlineQueryHandler(update, handler)
+	} else if update.CallbackQuery.Id != "" {
+		CallbackQueryHandler(update, handler)
 	}
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
+	callback := update.CallbackQuery
+
+	_ = callback
+	data := telegram.AnswerCallbackReq{
+		Url:       "t.me/spotify_share_bot?start=LOGIN",
+		ShowAlert: true,
+	}
+	_ = telegram.TgClient.AnswerCallbackQuery(callback.Id, &data)
+
+	fmt.Printf("")
+}
+
+// TODO move to libs
 func RandStringBytes(n int) string {
 	b := make([]byte, n)
 	for i := range b {
@@ -41,6 +59,7 @@ func RandStringBytes(n int) string {
 	return string(b)
 }
 
+// TODO refactoring !!!
 func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	user, err := GetOrCreateUser(&update.InlineQuery.From, handler)
 	if err != nil {

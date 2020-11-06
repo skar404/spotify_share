@@ -20,3 +20,10 @@ type InlineKeyboardReq struct {
 func (s *InlineKeyboardReq) Ready() {
 	s.ready = true
 }
+
+type AnswerCallbackReq struct {
+	Text      string `json:"text"`
+	ShowAlert bool   `json:"show_alert"`
+	Url       string `json:"url"`
+	CacheTime string `json:"cache_time"`
+}

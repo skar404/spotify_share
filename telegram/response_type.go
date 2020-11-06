@@ -83,13 +83,24 @@ type InlineQuery struct {
 	Offset   string   `json:"offset"`
 }
 
+type CallbackQuery struct {
+	Id              string  `json:"id"`
+	From            User    `json:"from"`
+	Message         Message `json:"message"`
+	InlineMessageId string  `json:"inline_message_id"`
+	ChatInstance    string  `json:"chat_instance"`
+	Data            string  `json:"data"`
+	GameShortName   string  `json:"game_short_name"`
+}
+
 type Update struct {
-	UpdateId          int         `json:"update_id"`
-	Message           Message     `json:"message"`
-	EditedMessage     Message     `json:"edited_message"`
-	ChannelPost       Message     `json:"channel_post"`
-	EditedChannelPost Message     `json:"edited_channel_post"`
-	InlineQuery       InlineQuery `json:"inline_query"`
+	UpdateId          int           `json:"update_id"`
+	Message           Message       `json:"message"`
+	EditedMessage     Message       `json:"edited_message"`
+	ChannelPost       Message       `json:"channel_post"`
+	EditedChannelPost Message       `json:"edited_channel_post"`
+	InlineQuery       InlineQuery   `json:"inline_query"`
+	CallbackQuery     CallbackQuery `json:"callback_query"`
 }
 
 type GetUpdate struct {

@@ -10,16 +10,9 @@ import (
 	"github.com/skar404/spotify_share/spotify"
 )
 
+// TODO refactoring
 func CreateToken(clientId, clientSecret string) (string, string, error) {
 	urlOAuth := spotify.OAuthClient.GetOAthUrl("session_id")
-
-	//c, _ := spotify.Init(clientId, clientSecret, "http://localhost/spotify", []string{
-	//	"user-read-recently-played",
-	//	"user-read-currently-playing",
-	//	"app-remote-control",
-	//	"streaming"})
-
-	//urlOAuth := c.GetAuthorizationUrl("session_id")
 
 	fmt.Println(urlOAuth)
 	fmt.Print("Enter text: ")
@@ -44,6 +37,7 @@ func CreateToken(clientId, clientSecret string) (string, string, error) {
 
 	api := spotify.ApiClient.SetUserToken(rf.AccessToken)
 
+	// TODO delete or may be move to main
 	a, _ := api.GetPlayNow()
 	_ = a
 

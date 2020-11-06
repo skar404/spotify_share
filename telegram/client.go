@@ -83,10 +83,10 @@ func (c *Config) GetUpdates(offSet int) (*GetUpdate, error) {
 		jsonBody["timeout"] = 30
 	}
 
-	resUpdate := GetUpdate{}
+	resUpdate := &GetUpdate{}
 	r, err := c.HttpClient("POST", "getUpdates", jsonBody, nil, &resUpdate, nil)
 	_ = r
-	return &resUpdate, err
+	return resUpdate, err
 }
 
 func (c *Config) AnswerInlineQuery(Id string, tmpList []interface{}) error {
@@ -113,6 +113,18 @@ func (c *Config) AnswerInlineQuery(Id string, tmpList []interface{}) error {
 
 	resUpdate := GetUpdate{}
 	r, err := c.HttpClient("POST", "answerInlineQuery", jsonBody, nil, &resUpdate, nil)
+	_ = r
+	return err
+}
+
+func (c *Config) AnswerCallbackQuery(Id string, data *AnswerCallbackReq) error {
+	rawData := map[string]interface{}{}
+	rawData["callback_query_id"] = Id
+	rawData["text"] = data.Text
+	rawData["show_alert"] = data.ShowAlert
+	rawData["url"] = data.Url
+
+	r, err := c.HttpClient("POST", "answerCallbackQuery", rawData, nil, nil, nil)
 	_ = r
 	return err
 }
