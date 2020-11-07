@@ -9,6 +9,7 @@ import (
 
 	"github.com/skar404/spotify_share/handler"
 	_ "github.com/skar404/spotify_share/handler"
+	"github.com/skar404/spotify_share/model"
 	"github.com/skar404/spotify_share/spotify"
 	"github.com/skar404/spotify_share/telegram"
 )
@@ -39,15 +40,25 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	callback := update.CallbackQuery
-
-	_ = callback
-	data := telegram.AnswerCallbackReq{
-		Url:       "t.me/spotify_share_bot?start=LOGIN",
-		ShowAlert: true,
+	conn := model.Conn{
+		DB: handler.DB,
 	}
+	user, err := conn.GetUser(callback.From.Id)
+
+	data := telegram.AnswerCallbackReq{}
+	if err != nil {
+		data.Url = "t.me/spotify_share_bot?start=LOGIN"
+	}
+
 	_ = telegram.TgClient.AnswerCallbackQuery(callback.Id, &data)
 
-	fmt.Printf("")
+	if user == nil {
+		return
+	}
+	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
+
+	api := spotify.ApiClient.SetUserToken(token.AccessToken)
+	_ = api.Play(callback.Data)
 }
 
 // TODO move to libs
@@ -93,10 +104,20 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 			"parse_mode": "Markdown",
 			"photo_url":  playNow.Item.Album.Images[0].URL,
 			"reply_markup": map[string]interface{}{
-				"inline_keyboard": [][]map[string]interface{}{{{
-					"text":          "Play in Spotify",
-					"callback_data": "https://google.com",
-				}}},
+				"inline_keyboard": [][]map[string]interface{}{{
+					{
+						"text":          "Play",
+						"callback_data": playNow.Item.URI,
+					},
+					{
+						"text":          "Add",
+						"callback_data": playNow.Item.URI,
+					},
+					{
+						"text":          "Sync",
+						"callback_data": playNow.Item.URI,
+					},
+				}},
 			},
 			"thumb_url": playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL,
 		})
@@ -121,7 +142,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 			"reply_markup": map[string]interface{}{
 				"inline_keyboard": [][]map[string]interface{}{{{
 					"text":          "Play in Spotify",
-					"callback_data": "https://google.com",
+					"callback_data": value.Track.URI,
 				}}},
 			},
 			"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,

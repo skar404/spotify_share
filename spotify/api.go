@@ -73,3 +73,13 @@ func (c *api) GetHistory() (spotify_type.RecentlyPlayed, error) {
 	}
 	return r, nil
 }
+
+func (c *api) Play(spotifyUri string) error {
+	rawData := map[string]interface{}{}
+	rawData["uris"] = []string{
+		spotifyUri,
+	}
+
+	_, _ = c.HttpClient("PUT", "v1/me/player/play", rawData, nil, nil, nil)
+	return nil
+}
