@@ -115,10 +115,6 @@ func runHttpServer(webhookToken string, handler *handler.Handler) {
 	e.Use(middleware.Recover())
 
 	// Routes
-	// TODO create view bot web hook
-	//e.GET(
-	//	fmt.Sprintf("/api/telegram/webhook/%s", webhookToken),
-	//)
 	e.GET("/spotify", handler.OAuthSpotify)
 
 	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
