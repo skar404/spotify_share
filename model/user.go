@@ -15,6 +15,7 @@ var UserNotActive = errors.New("user not active")
 type SpotifyToken struct {
 	Refresh string `json:"refresh" bson:"refresh"`
 	User    string `json:"user" bson:"user"`
+	Expired int64  `json:"expired" bson:"expired"`
 }
 
 type Spotify struct {
