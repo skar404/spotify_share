@@ -1,0 +1,9 @@
+version: "3.8"
+
+
+services:
+  echo-server:
+    image: jmalloc/echo-server
+    restart: always
+    ports:
+    - 32768:8080
