@@ -19,7 +19,5 @@ func main() {
 		return
 	}
 
-	b := ""
-
 	fmt.Println("")
 }

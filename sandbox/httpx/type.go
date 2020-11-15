@@ -24,7 +24,7 @@ type RequestClient struct {
 	request *Request
 }
 
-type ResponseClient struct {
+type Response struct {
 	Code string
 	Body string
 
