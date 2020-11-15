@@ -11,17 +11,21 @@ import (
 	"time"
 )
 
-type ApiClient struct {
+type HClient struct {
 	Url     string
 	Timeout time.Duration
 	Header  http.Header
 }
 
-func (c *ApiClient) getUrl(uri string) string {
+func (c *HClient) getUrl(uri string) string {
 	return c.Url + uri
 }
 
-func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseByte, error) {
+func Do(req *Request, resp *Response) error {
+	return nil
+}
+
+func (c *HClient) byteHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseByte, error) {
 	var r ResponseByte
 
 	var body io.Reader
@@ -75,7 +79,7 @@ func (c *ApiClient) byteHttpClient(method string, uri string, jsonBody map[strin
 	return r, nil
 }
 
-func (c *ApiClient) RowHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseRaw, error) {
+func (c *HClient) RowHttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, header http.Header) (ResponseRaw, error) {
 	var r ResponseRaw
 
 	bodyBytes, err := c.byteHttpClient(method, uri, jsonBody, urlValues, header)
@@ -91,7 +95,7 @@ func (c *ApiClient) RowHttpClient(method string, uri string, jsonBody map[string
 	return r, nil
 }
 
-func (c *ApiClient) HttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, object interface{}, header http.Header) (ResponseJson, error) {
+func (c *HClient) HttpClient(method string, uri string, jsonBody map[string]interface{}, urlValues url.Values, object interface{}, header http.Header) (ResponseJson, error) {
 	var r ResponseJson
 
 	if header == nil {

@@ -1,22 +1,32 @@
 package httpx
 
-type Response struct {
-	Code int
-	Url  string
+type RequestHeader struct {
 }
 
-type ResponseByte struct {
-	Response
-	Body []byte
+type Request struct {
+	Method string
+
+	URI    string
+	Header map[string]string
+
+	IsJson bool
 }
 
-type ResponseRaw struct {
-	Response
+type RequestClient struct {
+	ClientHost string
+
+	Header    map[string][]string
+	URLParams map[string][]string
+	//Cookies
+
+	JSONBody *interface{}
+
+	request *Request
+}
+
+type ResponseClient struct {
+	Code string
 	Body string
-}
 
-type ResponseJson struct {
-	Response
-	Body interface{}
-	Raw  string
+	JSONBody *interface{}
 }
