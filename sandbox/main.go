@@ -21,3 +21,7 @@ func main() {
 
 	fmt.Println("")
 }
+
+func init() {
+	fmt.Println("TMP")
+}
