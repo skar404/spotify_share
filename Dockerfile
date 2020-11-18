@@ -10,3 +10,5 @@ WORKDIR /app
 COPY --from=build /app/spotify_share .
 
 RUN chmod +x spotify_share
+
+EXPOSE 1323

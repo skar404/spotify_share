@@ -117,5 +117,5 @@ func runHttpServer(webhookToken string, handler *handler.Handler) {
 	// Routes
 	e.GET("/spotify", handler.OAuthSpotify)
 
-	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
+	e.Logger.Fatal(e.Start("0.0.0.0:1323"))
 }
