@@ -5,7 +5,7 @@ COPY . .
 
 RUN go build -o bin/spotify_share
 
-FROM alpine as app
+FROM alpine
 
 WORKDIR /root/
 COPY --from=builder /app/bin/spotify_share /usr/local/bin/
