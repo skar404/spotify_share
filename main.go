@@ -31,7 +31,7 @@ func main() {
 	appMode := global.AppMode
 
 	// Database connection
-	db, err := mgo.Dial("root:example@localhost")
+	db, err := mgo.Dial(global.DBUrl)
 	if err != nil {
 		log.Fatal(err)
 	}

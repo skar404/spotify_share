@@ -30,6 +30,8 @@ var (
 
 	AppMode = os.Getenv("APP_MOD")
 
+	DBUrl = getEnv("DB_URL", "root:example@localhost")
+
 	JWTToken     = getEnv("JWT_TOKEN", "TEST_TOKEN")
 	JWTTokenByte = []byte(JWTToken)
 )
