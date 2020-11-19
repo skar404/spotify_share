@@ -1,5 +1,4 @@
 Dockerfile
-.github/
-.env
+.*
 
 sandbox/
