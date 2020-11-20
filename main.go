@@ -25,8 +25,8 @@ func main() {
 	webhookToken := global.WebhookToken
 	telegramToken := global.TelegramToken
 
-	clientId := os.Getenv("CLIENT_ID")
-	clientSecret := os.Getenv("CLIENT_SECRET")
+	clientId := global.ClientId
+	clientSecret := global.ClientSecret
 
 	appMode := global.AppMode
 
