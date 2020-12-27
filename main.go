@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	stdLog "log"
 	"os"
@@ -10,7 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/skar404/spotify_share/bot"
 	"github.com/skar404/spotify_share/commands"
@@ -31,13 +33,29 @@ func main() {
 	appMode := global.AppMode
 
 	// Database connection
-	db, err := mgo.Dial(global.DBUrl)
+	url := fmt.Sprintf("mongodb://%s:%s@%s/%s?replicaSet=%s&tls=true&tlsCaFile=%s",
+		global.DBUser,
+		global.DBPass,
+		global.DBHost,
+		global.DBName,
+		global.DBRs,
+		global.DBCACERT)
+
+	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
+	defer conn.Disconnect(context.Background())
+
+	db := conn.Database(global.DBName)
+	log.Info("conn to OldDB", db.Name())
+
 	// Initialize handler
-	h := &handler.Handler{DB: db}
+	h := &handler.Handler{
+		DBMongoDB: conn,
+		DB:        db,
+	}
 
 	lockChanel := make(chan bool)
 	if appMode == "CLI" {
@@ -116,6 +134,7 @@ func runHttpServer(webhookToken string, handler *handler.Handler) {
 
 	// Routes
 	e.GET("/spotify", handler.OAuthSpotify)
+	e.GET("/ping", handler.Ping)
 
 	e.Logger.Fatal(e.Start("0.0.0.0:1323"))
 }

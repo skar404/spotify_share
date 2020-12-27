@@ -149,7 +149,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		})
 	}
 
-	_ = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
+	err = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
 	_ = user
 	_ = r
 	_ = token
@@ -158,17 +158,20 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 	user, err := GetOrCreateUser(&update.Message.From, handler)
 	if err != nil {
+		log.Error("error get user err=", err)
 		return
 	}
 
 	command, err := getCommand(update.Message.Text)
 	// Обрабатываем только команды, если нет то скипаем
 	if err != nil {
+		log.Error("error getCommand err=", err)
 		return
 	}
 
 	if user.Active == false {
 		// skip block user ...
+		log.Info("skip block user ...=")
 		return
 	}
 	log.Infof("send message: %s", update.Message.Text)

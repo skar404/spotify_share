@@ -5,8 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/skar404/spotify_share/handler"
 	"github.com/skar404/spotify_share/model"
@@ -36,24 +35,23 @@ func getCommand(m string) (*Command, error) {
 	return &c, nil
 }
 
-func GetOrCreateUser(tgUser *telegram.User, handler *handler.Handler) (*model.User, error) {
+func GetOrCreateUser(tgUser *telegram.User, h *handler.Handler) (*model.User, error) {
 	if tgUser.Id == 0 {
 		return nil, NotValidUser
 	}
 
 	conn := model.Conn{
-		DB: handler.DB,
+		DB: h.DB,
 	}
 	user, err := conn.GetUser(tgUser.Id)
+
 	if err == nil {
 		return user, nil
-	} else if err != mgo.ErrNotFound {
+	} else if !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
 	}
 
 	u := &model.User{
-		Id: bson.NewObjectId(),
-
 		Telegram: model.Telegram{
 			Id:    tgUser.Id,
 			Login: tgUser.Username,

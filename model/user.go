@@ -1,16 +1,16 @@
 package model
 
 import (
+	"context"
 	"errors"
 	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const userCollection = "users"
-
-var UserNotActive = errors.New("user not active")
 
 type SpotifyToken struct {
 	Refresh string `json:"refresh" bson:"refresh"`
@@ -28,7 +28,7 @@ type Telegram struct {
 }
 
 type User struct {
-	Id bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Id primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 
 	Telegram Telegram `json:"telegram,omitempty" bson:"telegram,omitempty"`
 
@@ -40,30 +40,26 @@ type User struct {
 	Active bool `json:"active,omitempty" bson:"active,omitempty"`
 }
 
-func (c *Conn) Collection() (*mgo.Session, *mgo.Collection) {
-	conn, db := c.Clone()
-	table := db.C(userCollection)
-	return conn, table
+func (c *Conn) Collection() *mongo.Collection {
+	coll := c.DB.Collection(userCollection)
+	return coll
 }
 
 func (c *Conn) GetUser(tgId int64) (*User, error) {
 	var err error
-	conn, collection := c.Collection()
-	defer conn.Close()
+	ctx := context.Background()
+	collection := c.Collection()
 
-	u := &User{Id: bson.NewObjectId()}
+	res := collection.FindOne(ctx, bson.M{"telegram.id": tgId})
 
-	err = collection.Find(bson.M{"telegram.id": tgId}).One(u)
+	findUser := User{}
+	err = res.Decode(&findUser)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if u.Active == false {
-		return nil, UserNotActive
-	}
-
-	return u, nil
+	return &findUser, nil
 }
 
 // CreateUser
@@ -71,22 +67,35 @@ func (c *Conn) GetUser(tgId int64) (*User, error) {
 // ... но сделал это для удобства и большей явности
 func (c *Conn) CreateUser(u *User) (*User, error) {
 	var err error
-	conn, collection := c.Collection()
-	defer conn.Close()
+	ctx := context.Background()
+	collection := c.Collection()
 
-	err = collection.Insert(u)
+	result, err := collection.InsertOne(ctx, u)
 	if err != nil {
 		return u, err
 	}
+
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		u.Id = oid
+	} else {
+		// FIXME add context in err
+		return u, errors.New("error get ObjectID")
+	}
+
 	return u, nil
 }
 
-func (c *Conn) UpdateUser(u *bson.ObjectId, user *User) error {
-	conn, collection := c.Collection()
-	defer conn.Close()
-
-	user.UpdateAt = time.Now()
-
-	err := collection.UpdateId(u, bson.M{"$set": user})
+func (c *Conn) UpdateSpotifyToken(u *primitive.ObjectID, sToken *Spotify) error {
+	ctx := context.Background()
+	collection := c.Collection()
+	_, err := collection.UpdateOne(ctx,
+		bson.M{"_id": &u},
+		bson.D{
+			{"$set", map[string]time.Time{"update_at": time.Now()}},
+			{"$set", map[string]Spotify{
+				"spotify": *sToken,
+			}},
+		},
+	)
 	return err
 }
