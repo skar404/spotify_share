@@ -3,14 +3,9 @@ package handler
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	"github.com/skar404/spotify_share/libs"
@@ -62,7 +57,7 @@ func (h *Handler) OAuthSpotify(c echo.Context) (err error) {
 	}
 
 	// Save token in OldDB
-	spotifyToken := model.Spotify{Token: model.SpotifyToken{
+	spotifyToken := model.Spotify{Token: &model.SpotifyToken{
 		Refresh: token.RefreshToken,
 		User:    token.TokenReq.AccessToken,
 	}}
@@ -85,49 +80,6 @@ func (h *Handler) Ping(c echo.Context) (err error) {
 		}
 		return err
 	}
-
-	collUser := h.DB.Collection("user")
-
-	user := model.User{
-		Telegram: model.Telegram{
-			Id:    123,
-			Login: "app",
-		},
-	}
-
-	result, err := collUser.InsertOne(ctx, &user)
-	if err != nil {
-		log.Error("error create user err=", err)
-		_ = c.JSON(http.StatusBadGateway, map[string]bool{"ok": false})
-		return nil
-	}
-
-	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-		user.Id = oid
-	} else {
-		_ = c.JSON(http.StatusBadGateway, map[string]bool{"ok": false})
-		return nil
-	}
-
-	user.Active = true
-	user.UpdateAt = time.Now()
-	user.Spotify.Token.Refresh = "radsa a12 "
-
-	log.Info(collUser.UpdateOne(ctx,
-		bson.M{"_id": &user.Id},
-		bson.D{
-			{"$set", &user},
-		},
-	))
-
-	res := collUser.FindOne(ctx, bson.M{"telegram.id": 12223})
-
-	findUser := model.User{}
-
-	err = res.Decode(&findUser)
-
-	_is := errors.Is(err, mongo.ErrNoDocuments)
-	_ = _is
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"ok": true})
 }

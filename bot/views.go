@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -58,7 +59,30 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
 	api := spotify.ApiClient.SetUserToken(token.AccessToken)
-	_ = api.Play(callback.Data)
+
+	splitData := strings.SplitN(callback.Data, "::", 2)
+
+	if len(splitData) != 2 {
+		log.Info("skip ist=", splitData, ", len=", len(splitData))
+		return
+	}
+	log.Info(splitData[0])
+
+	if splitData[0] == "PLAY" {
+		// Пока не придумал как можно выклюить трек и сохранить контекст который до этого слушал пользоватлеь...
+		// идея:
+		// # возможно стоит потестить api очереди и дествовать по алгоритму:
+		// - получать контекст плеира
+		// - включать трек
+		// - подмешивать контекст (желательно не тераю очередь)
+
+		// song, err := api.GetPlayNow()
+		// context := api.AddQueue(song.Item.URI)
+		_ = api.Play(splitData[1])
+		//_ = api.AddQueue(splitData[1])
+	} else if splitData[0] == "ADD" {
+		_ = api.AddQueue(splitData[1])
+	}
 }
 
 // TODO move to libs
@@ -73,99 +97,114 @@ func RandStringBytes(n int) string {
 // TODO refactoring !!!
 func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	user, err := GetOrCreateUser(&update.InlineQuery.From, handler)
+
 	if err != nil {
 		return
 	}
-	var tmpList []interface{}
+	if user.Spotify.Token != nil {
+		var tmpList []interface{}
+		token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
-	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
+		api := spotify.ApiClient.SetUserToken(token.AccessToken)
+		r, _ := api.GetHistory()
+		playNow, err := api.GetPlayNow()
 
-	api := spotify.ApiClient.SetUserToken(token.AccessToken)
-	r, _ := api.GetHistory()
-	playNow, err := api.GetPlayNow()
+		if err == nil {
+			tmpList = append(tmpList, map[string]interface{}{
+				"type":  "photo",
+				"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+				"title": playNow.Item.Name,
+				"description": fmt.Sprintf("%s",
+					playNow.Item.Artists[0].Name),
+				"is_personal": true,
+				//"input_message_content": map[string]interface{}{
+				//	"message_text": fmt.Sprintf("test ![img](%s)", playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL),
+				//	"parse_mode":   "Markdown",
+				//},
+				"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***\ndebug info: inline ID=%s",
+					playNow.Item.Name,
+					playNow.Item.Artists[0].Name,
+					playNow.Item.Album.Name,
+					update.InlineQuery.Id),
+				"parse_mode": "Markdown",
+				"photo_url":  playNow.Item.Album.Images[0].URL,
+				"reply_markup": map[string]interface{}{
+					"inline_keyboard": [][]map[string]interface{}{{
+						{
+							"text":          "Play",
+							"callback_data": fmt.Sprintf("PLAY::%s", playNow.Item.URI),
+						},
+						{
+							"text":          "Add",
+							"callback_data": fmt.Sprintf("ADD::%s", playNow.Item.URI),
+						},
+						//{
+						//	"text":          "Sync",
+						//	"callback_data": fmt.Sprintf("SYNC:%s", playNow.Item.URI),
+						//},
+					}},
+				},
+				"thumb_url": playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL,
+			})
+		}
 
-	if err == nil {
-		tmpList = append(tmpList, map[string]interface{}{
-			"type":  "photo",
-			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-			"title": playNow.Item.Name,
-			"description": fmt.Sprintf("%s",
-				playNow.Item.Artists[0].Name),
-			"is_personal": true,
-			//"input_message_content": map[string]interface{}{
-			//	"message_text": fmt.Sprintf("test ![img](%s)", playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL),
-			//	"parse_mode":   "Markdown",
-			//},
-			"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***\ndebug info: inline ID=%s",
-				playNow.Item.Name,
-				playNow.Item.Artists[0].Name,
-				playNow.Item.Album.Name,
-				update.InlineQuery.Id),
-			"parse_mode": "Markdown",
-			"photo_url":  playNow.Item.Album.Images[0].URL,
-			"reply_markup": map[string]interface{}{
-				"inline_keyboard": [][]map[string]interface{}{{
-					{
-						"text":          "Play",
-						"callback_data": playNow.Item.URI,
-					},
-					{
-						"text":          "Add",
-						"callback_data": playNow.Item.URI,
-					},
-					{
-						"text":          "Sync",
-						"callback_data": playNow.Item.URI,
-					},
-				}},
-			},
-			"thumb_url": playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL,
-		})
+		for _, value := range r.Items {
+			tmpList = append(tmpList, map[string]interface{}{
+				"type":        "photo",
+				"id":          fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+				"title":       value.Track.Name,
+				"description": fmt.Sprintf("%s"),
+				"caption": fmt.Sprintf("%s\n%s\nInline ID=%s",
+					value.Track.Artists[0].Name,
+					value.Track.Album.Name,
+					update.InlineQuery.Id),
+				"is_personal": true,
+				"photo_url":   value.Track.Album.Images[0].URL,
+				//"input_message_content": map[string]interface{}{
+				//	"message_text": "test",
+				//	"parse_mode":   "Markdown",
+				"parse_mode": "Markdown",
+				"reply_markup": map[string]interface{}{
+					"inline_keyboard": [][]map[string]interface{}{{
+						{
+							"text":          "Play",
+							"callback_data": fmt.Sprintf("PLAY::%s", value.Track.URI),
+						},
+						{
+							"text":          "Add",
+							"callback_data": fmt.Sprintf("ADD::%s", value.Track.URI),
+						}}},
+				},
+				"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
+			})
+		}
+		err = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
+		if err != nil {
+			log.Error("AnswerInlineQuery err=", err)
+		}
+	} else {
+		r := map[string]interface{}{
+			"is_personal":         true,
+			"switch_pm_text":      "login in spotify ...",
+			"switch_pm_parameter": "inline_redirect",
+		}
+		err = telegram.TgClient.AnswerInlineQueryTmp(update.InlineQuery.Id, r)
+		log.Info("app")
+
 	}
-
-	for _, value := range r.Items {
-		tmpList = append(tmpList, map[string]interface{}{
-			"type":        "photo",
-			"id":          fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-			"title":       value.Track.Name,
-			"description": fmt.Sprintf("%s"),
-			"caption": fmt.Sprintf("%s\n%s\nInline ID=%s",
-				value.Track.Artists[0].Name,
-				value.Track.Album.Name,
-				update.InlineQuery.Id),
-			"is_personal": true,
-			"photo_url":   value.Track.Album.Images[0].URL,
-			//"input_message_content": map[string]interface{}{
-			//	"message_text": "test",
-			//	"parse_mode":   "Markdown",
-			"parse_mode": "Markdown",
-			"reply_markup": map[string]interface{}{
-				"inline_keyboard": [][]map[string]interface{}{{{
-					"text":          "Play in Spotify",
-					"callback_data": value.Track.URI,
-				}}},
-			},
-			"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
-		})
-	}
-
-	err = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
-	_ = user
-	_ = r
-	_ = token
 }
 
 func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 	user, err := GetOrCreateUser(&update.Message.From, handler)
 	if err != nil {
-		log.Error("error get user err=", err)
+		log.Error("error create user err=", err)
 		return
 	}
 
 	command, err := getCommand(update.Message.Text)
 	// Обрабатываем только команды, если нет то скипаем
 	if err != nil {
-		log.Error("error getCommand err=", err)
+		log.Info("skip text err=", err)
 		return
 	}
 

@@ -133,3 +133,24 @@ type Item struct {
 	Type             string       `json:"type"`
 	URI              string       `json:"uri"`
 }
+
+type Player struct {
+	Timestamp            int64   `json:"timestamp"`
+	Device               Device  `json:"device"`
+	ProgressMs           string  `json:"progress_ms"`
+	IsPlaying            bool    `json:"is_playing"`
+	CurrentlyPlayingType string  `json:"currently_playing_type"`
+	Actions              Actions `json:"actions"`
+	Item                 Item    `json:"item"`
+	ShuffleState         bool    `json:"shuffle_state"`
+	RepeatState          string  `json:"repeat_state"`
+	Context              Context `json:"context"`
+}
+type Device struct {
+	ID            string `json:"id"`
+	IsActive      bool   `json:"is_active"`
+	IsRestricted  bool   `json:"is_restricted"`
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	VolumePercent int    `json:"volume_percent"`
+}

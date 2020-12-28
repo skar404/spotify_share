@@ -63,7 +63,7 @@ func (c *api) GetPlayNow() (spotify_type.CurrentlyPlaying, error) {
 // https://developer.spotify.com/documentation/web-api/reference/player/get-recently-played/
 func (c *api) GetHistory() (spotify_type.RecentlyPlayed, error) {
 	r := spotify_type.RecentlyPlayed{}
-	response, err := c.HttpClient("GET", "v1/me/player/recently-played", nil, nil, &r, nil)
+	response, err := c.HttpClient("GET", "v1/me/player/recently-played?limit=47", nil, nil, &r, nil)
 	if err != nil {
 		return r, NotValidTokenError
 	}
@@ -80,6 +80,34 @@ func (c *api) Play(spotifyUri string) error {
 		spotifyUri,
 	}
 
-	_, _ = c.HttpClient("PUT", "v1/me/player/play", rawData, nil, nil, nil)
+	//if contextUri != "" {
+	//	//rawData["context_uri"] = contextUri
+	//
+	//	rawData["offset"] = map[string]string{
+	//		"uri": spotifyUri,
+	//	}
+	//}
+
+	r, err := c.HttpClient("PUT", "v1/me/player/play", rawData, nil, nil, nil)
+	_, _ = r, err
 	return nil
+}
+
+func (c *api) AddQueue(spotifyUri string) error {
+	r, err := c.HttpClient("POST", fmt.Sprintf("v1/me/player/queue?uri=%s", spotifyUri), nil, nil, nil, nil)
+	_, _ = r, err
+	return nil
+}
+
+func (c *api) GetPlayer() (spotify_type.Player, error) {
+	r := spotify_type.Player{}
+	raw, err := c.HttpClient("GET", "v1/me/player", nil, nil, &r, nil)
+	_ = raw
+	return r, err
+}
+
+func (c *api) Next() error {
+	r, err := c.HttpClient("POST", "v1/me/player/next", nil, nil, nil, nil)
+	_, _ = r, err
+	return err
 }

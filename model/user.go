@@ -19,7 +19,7 @@ type SpotifyToken struct {
 }
 
 type Spotify struct {
-	Token SpotifyToken `json:"token,omitempty" bson:"token,omitempty"`
+	Token *SpotifyToken `json:"token,omitempty" bson:"token,omitempty"`
 }
 
 type Telegram struct {

@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/labstack/gommon/log"
+
 	"github.com/skar404/spotify_share/global"
 	"github.com/skar404/spotify_share/rhttp"
 )
@@ -96,24 +98,21 @@ func (c *Config) AnswerInlineQuery(Id string, tmpList []interface{}) error {
 	jsonBody["inline_query_id"] = Id
 	jsonBody["cache_time"] = 0
 	jsonBody["results"] = tmpList
-	//jsonBody["results"] = []interface{}{
-	//	map[string]interface{}{
-	//		"type":        "article",
-	//		"id":          "SUPER_JWT_ID",
-	//		"title":       "Send Audio 1",
-	//		"is_personal": true,
-	//		"description": fmt.Sprintf("APPS %s", Id),
-	//		"input_message_content": map[string]interface{}{
-	//			"message_text": "test",
-	//			"parse_mode":   "Markdown",
-	//		},
-	//		"thumb_url": fmt.Sprintf("https://thiscatdoesnotexist.com/?id=%s", Id),
-	//	},
-	//}
 
 	resUpdate := GetUpdate{}
 	r, err := c.HttpClient("POST", "answerInlineQuery", jsonBody, nil, &resUpdate, nil)
 	_ = r
+	return err
+}
+
+func (c *Config) AnswerInlineQueryTmp(Id string, jsonBody map[string]interface{}) error {
+	jsonBody["inline_query_id"] = Id
+
+	resUpdate := GetUpdate{}
+	r, err := c.HttpClient("POST", "answerInlineQuery", jsonBody, nil, &resUpdate, nil)
+	_ = r
+
+	log.Info(r.Raw)
 	return err
 }
 
