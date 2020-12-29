@@ -33,13 +33,16 @@ func main() {
 	appMode := global.AppMode
 
 	// Database connection
-	url := fmt.Sprintf("mongodb://%s:%s@%s/%s?replicaSet=%s&tls=true&tlsCaFile=%s",
+	url := fmt.Sprintf("mongodb://%s:%s@%s/%s?replicaSet=%s",
 		global.DBUser,
 		global.DBPass,
 		global.DBHost,
 		global.DBName,
-		global.DBRs,
-		global.DBCACERT)
+		global.DBRs)
+
+	if global.DBCACERT != "" {
+		url = fmt.Sprintf("%s&tls=true&tlsCaFile=%s", url, global.DBCACERT)
+	}
 
 	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
 	if err != nil {
@@ -106,6 +109,7 @@ func runGetUpdate(telegramToken string, h *handler.Handler) {
 	for true {
 		raw, err := tg.GetUpdates(updateId)
 
+		log.Info("GetUpdates=", raw)
 		if err != nil {
 			stdLog.Println(err)
 			continue

@@ -47,13 +47,13 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	user, err := conn.GetUser(callback.From.Id)
 
 	data := telegram.AnswerCallbackReq{}
-	if err != nil {
+	if err != nil || user.Spotify.Token == nil {
 		data.Url = "t.me/spotify_share_bot?start=LOGIN"
 	}
 
 	_ = telegram.TgClient.AnswerCallbackQuery(callback.Id, &data)
 
-	if user == nil {
+	if user == nil || user.Spotify.Token == nil {
 		return
 	}
 	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)

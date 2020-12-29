@@ -1,8 +1,6 @@
 package bot
 
 import (
-	"fmt"
-
 	"github.com/skar404/spotify_share/libs"
 	"github.com/skar404/spotify_share/model"
 	"github.com/skar404/spotify_share/spotify"
@@ -26,8 +24,9 @@ func (c *CommandContext) StartCommand() {
 	}}}
 	rm.Ready()
 
-	if len(c.command.Args) > 0 {
-		m = fmt.Sprintf(TemplateMessageLogin, "@spotify_share_bot")
-	}
+	// FIXME попарвить когда идею с ARGS
+	//if len(c.command.Args) > 0 {
+	//	m = fmt.Sprintf(TemplateMessageStart, "@spotify_share_bot")
+	//}
 	_ = telegram.TgClient.SendMessage(c.update.Message.Chat.Id, m, &rm)
 }

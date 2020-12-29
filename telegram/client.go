@@ -82,7 +82,7 @@ func (c *Config) GetUpdates(offSet int) (*GetUpdate, error) {
 	jsonBody := make(map[string]interface{})
 	if offSet != 0 {
 		jsonBody["offset"] = strconv.Itoa(offSet)
-		jsonBody["timeout"] = 30
+		jsonBody["timeout"] = 1
 	}
 
 	resUpdate := &GetUpdate{}
