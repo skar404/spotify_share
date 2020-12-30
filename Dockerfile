@@ -8,7 +8,7 @@ COPY . .
 
 RUN go build -o bin/spotify_share
 
-FROM alpine
+FROM alpine:3.12
 
 RUN apk --no-cache add ca-certificates
 
