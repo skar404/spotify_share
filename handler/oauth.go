@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -56,10 +57,10 @@ func (h *Handler) OAuthSpotify(c echo.Context) (err error) {
 		return c.Redirect(http.StatusMovedPermanently, botUrl+"?start=ERROR:TOKEN")
 	}
 
-	// Save token in OldDB
 	spotifyToken := model.Spotify{Token: &model.SpotifyToken{
 		Refresh: token.RefreshToken,
 		User:    token.TokenReq.AccessToken,
+		Expired: time.Now().Unix() + token.TokenReq.ExpiresIn,
 	}}
 
 	err = conn.UpdateSpotifyToken(&user.Id, &spotifyToken)

@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -56,9 +57,26 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	if user == nil || user.Spotify.Token == nil {
 		return
 	}
-	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
-	api := spotify.ApiClient.SetUserToken(token.AccessToken)
+	token := user.Spotify.Token.User
+	newToken, err := spotify.RefreshToken(user.Spotify.Token.Refresh, user.Spotify.Token.Expired)
+	if err == nil {
+		log.Infof("refresh user token u_id=%s", user.Id)
+		if err := conn.UpdateSpotifyToken(&user.Id, &model.Spotify{Token: &model.SpotifyToken{
+			Refresh: user.Spotify.Token.Refresh,
+			User:    newToken.AccessToken,
+			Expired: newToken.Expired,
+		}}); err != nil {
+			log.Errorf("error update token u_id=%s err=%v", user.Id, err)
+			return
+		}
+		token = newToken.AccessToken
+	} else if !errors.Is(err, spotify.TokenNotExpired) {
+		log.Errorf("error refresh token u_id=%s err=%v", user.Id, err)
+		return
+	}
+
+	api := spotify.ApiClient.SetUserToken(token)
 
 	splitData := strings.SplitN(callback.Data, "::", 2)
 
@@ -66,7 +84,6 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		log.Info("skip ist=", splitData, ", len=", len(splitData))
 		return
 	}
-	log.Infof("method %s", splitData[0])
 
 	if splitData[0] == "PLAY" {
 		// Пока не придумал как можно выклюить трек и сохранить контекст который до этого слушал пользоватлеь...
@@ -79,12 +96,14 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		// song, err := api.GetPlayNow()
 		// context := api.AddQueue(song.Item.URI)
 		if err := api.Play(splitData[1]); err != nil {
-			log.Infof("play error=%s", err)
+			log.Infof("play song error=%s", err)
 		}
 
 		//_ = api.AddQueue(splitData[1])
 	} else if splitData[0] == "ADD" {
-		_ = api.AddQueue(splitData[1])
+		if err := api.AddQueue(splitData[1]); err != nil {
+			log.Infof("add queue error=%s", err)
+		}
 	}
 }
 
@@ -99,6 +118,10 @@ func RandStringBytes(n int) string {
 
 // TODO refactoring !!!
 func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
+	conn := model.Conn{
+		DB: handler.DB,
+	}
+
 	user, err := GetOrCreateUser(&update.InlineQuery.From, handler)
 
 	if err != nil {
@@ -106,9 +129,26 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 	}
 	if user.Spotify.Token != nil {
 		var tmpList []interface{}
-		token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
-		api := spotify.ApiClient.SetUserToken(token.AccessToken)
+		token := user.Spotify.Token.User
+		newToken, err := spotify.RefreshToken(user.Spotify.Token.Refresh, user.Spotify.Token.Expired)
+		if err == nil {
+			log.Infof("refresh user token u_id=%s", user.Id)
+			if err := conn.UpdateSpotifyToken(&user.Id, &model.Spotify{Token: &model.SpotifyToken{
+				Refresh: user.Spotify.Token.Refresh,
+				User:    newToken.AccessToken,
+				Expired: newToken.Expired,
+			}}); err != nil {
+				log.Errorf("error update token u_id=%s err=%v", user.Id, err)
+				return
+			}
+			token = newToken.AccessToken
+		} else if !errors.Is(err, spotify.TokenNotExpired) {
+			log.Errorf("error refresh token u_id=%s err=%v", user.Id, err)
+			return
+		}
+
+		api := spotify.ApiClient.SetUserToken(token)
 		r, _ := api.GetHistory()
 		playNow, err := api.GetPlayNow()
 

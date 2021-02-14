@@ -75,16 +75,12 @@ func (c *Context) AnswerInlineQuery(Id string, tmpList []interface{}) error {
 	jsonBody["cache_time"] = 0
 	jsonBody["results"] = tmpList
 
-	r := &GetUpdate{}
 	req := requests.Request{
 		Method:   http.MethodPost,
 		Uri:      "answerInlineQuery",
 		JsonBody: &jsonBody,
 	}
-	res := requests.Response{
-		Struct: &r,
-	}
-
+	res := requests.Response{}
 	return c.NewRequest(&req, &res)
 }
 

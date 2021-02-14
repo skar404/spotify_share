@@ -2,7 +2,7 @@ package spotify_type
 
 type TokenReq struct {
 	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
+	ExpiresIn   int64  `json:"expires_in"`
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
 }
