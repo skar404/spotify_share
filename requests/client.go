@@ -22,6 +22,8 @@ func (c *RequestClient) NewRequest(req *Request, res *Response) error {
 
 	if req.Body != nil {
 		body = *req.Body
+	} else if req.UrlValues != nil {
+		body = *bytes.NewBuffer([]byte(req.UrlValues.Encode()))
 	} else {
 		//var body io.Reader
 		if req.JsonBody != nil {

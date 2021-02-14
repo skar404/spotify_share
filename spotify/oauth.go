@@ -1,16 +1,17 @@
 package spotify
 
 import (
+	"github.com/skar404/spotify_share/requests"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/skar404/spotify_share/global"
-	"github.com/skar404/spotify_share/rhttp"
 	"github.com/skar404/spotify_share/spotify/type"
 )
 
 type OAuth struct {
-	rhttp.ApiClient
+	requests.RequestClient
 
 	clientId     string
 	clientSecret string
@@ -31,7 +32,7 @@ func InitOAuth() OAuth {
 	urlAuthorization, _ := url.Parse("https://accounts.spotify.com/authorize")
 
 	return OAuth{
-		ApiClient: rhttp.ApiClient{
+		RequestClient: requests.RequestClient{
 			Url: "https://accounts.spotify.com/api/token",
 			Header: map[string][]string{
 				"Content-Type": {"application/x-www-form-urlencoded"},
@@ -63,33 +64,42 @@ func (c *OAuth) GetOAthUrl(state string) string {
 
 func (c *OAuth) GetAccessOrRefreshToken(code string) (spotify_type.TokenOrRefreshReq, error) {
 	var r spotify_type.TokenOrRefreshReq
-	var err error
 
-	body := url.Values{
-		"code":          {code},
-		"scope":         {c.OAuthScope},
-		"redirect_uri":  {c.RedirectUri},
-		"client_id":     {c.clientId},
-		"client_secret": {c.clientSecret},
-		"grant_type":    {"authorization_code"},
+	req := requests.Request{
+		Method: http.MethodPost,
+		Uri:    "",
+		UrlValues: url.Values{
+			"code":          {code},
+			"scope":         {c.OAuthScope},
+			"redirect_uri":  {c.RedirectUri},
+			"client_id":     {c.clientId},
+			"client_secret": {c.clientSecret},
+			"grant_type":    {"authorization_code"},
+		},
 	}
-
-	_, err = c.HttpClient("POST", "", nil, body, &r, nil)
+	res := requests.Response{
+		Struct: &r,
+	}
+	err := c.NewRequest(&req, &res)
 	return r, err
 }
 
 func (c *OAuth) RefreshToken(token string) (spotify_type.TokenReq, error) {
 	var r spotify_type.TokenReq
-	var err error
-
-	body := url.Values{
-		"scope":         {c.OAuthScope},
-		"refresh_token": {token},
-		"client_id":     {c.clientId},
-		"client_secret": {c.clientSecret},
-		"grant_type":    {"refresh_token"},
+	req := requests.Request{
+		Method: http.MethodPost,
+		Uri:    "",
+		UrlValues: url.Values{
+			"scope":         {c.OAuthScope},
+			"refresh_token": {token},
+			"client_id":     {c.clientId},
+			"client_secret": {c.clientSecret},
+			"grant_type":    {"refresh_token"},
+		},
 	}
-
-	_, err = c.HttpClient("POST", "", nil, body, &r, nil)
+	res := requests.Response{
+		Struct: &r,
+	}
+	err := c.NewRequest(&req, &res)
 	return r, err
 }

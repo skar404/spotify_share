@@ -90,13 +90,12 @@ func runCLI(clientId, clientSecret string) {
 }
 
 func runGetUpdate(telegramToken string, h *handler.Handler) {
-	tg := &telegram.TgClient
+	tg := &telegram.Client
 
 	updateId := 0
 	for true {
 		raw, err := tg.GetUpdates(updateId)
 
-		log.Info("GetUpdates=", raw)
 		if err != nil {
 			stdLog.Println(err)
 			continue

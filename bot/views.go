@@ -51,7 +51,7 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		data.Url = "t.me/spotify_share_bot?start=LOGIN"
 	}
 
-	_ = telegram.TgClient.AnswerCallbackQuery(callback.Id, &data)
+	_ = telegram.Client.AnswerCallbackQuery(callback.Id, &data)
 
 	if user == nil || user.Spotify.Token == nil {
 		return
@@ -66,7 +66,7 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		log.Info("skip ist=", splitData, ", len=", len(splitData))
 		return
 	}
-	log.Info(splitData[0])
+	log.Infof("method %s", splitData[0])
 
 	if splitData[0] == "PLAY" {
 		// Пока не придумал как можно выклюить трек и сохранить контекст который до этого слушал пользоватлеь...
@@ -78,7 +78,10 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 
 		// song, err := api.GetPlayNow()
 		// context := api.AddQueue(song.Item.URI)
-		_ = api.Play(splitData[1])
+		if err := api.Play(splitData[1]); err != nil {
+			log.Infof("play error=%s", err)
+		}
+
 		//_ = api.AddQueue(splitData[1])
 	} else if splitData[0] == "ADD" {
 		_ = api.AddQueue(splitData[1])
@@ -178,7 +181,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 				"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
 			})
 		}
-		err = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
+		err = telegram.Client.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
 		if err != nil {
 			log.Error("AnswerInlineQuery err=", err)
 		}
@@ -188,7 +191,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 			"switch_pm_text":      "login in spotify ...",
 			"switch_pm_parameter": "inline_redirect",
 		}
-		err = telegram.TgClient.AnswerInlineQueryTmp(update.InlineQuery.Id, r)
+		err = telegram.Client.AnswerInlineQueryTmp(update.InlineQuery.Id, r)
 		log.Info("app")
 
 	}
@@ -202,7 +205,7 @@ func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 	}
 
 	command, err := getCommand(update.Message.Text)
-	// Обрабатываем только команды, если нет то скипаем
+	// обрабатываем только команды, если нет то скипаем
 	if err != nil {
 		log.Info("skip text err=", err)
 		return

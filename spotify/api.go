@@ -3,22 +3,23 @@ package spotify
 import (
 	"errors"
 	"fmt"
+	"github.com/skar404/spotify_share/requests"
+	"net/http"
 
-	"github.com/skar404/spotify_share/rhttp"
 	"github.com/skar404/spotify_share/spotify/type"
 )
 
-type api struct {
-	rhttp.ApiClient
+type ApiContext struct {
+	requests.RequestClient
 
 	userToken string
 }
 
 var ApiClient = InitApi()
 
-func InitApi() api {
-	return api{
-		ApiClient: rhttp.ApiClient{
+func InitApi() ApiContext {
+	return ApiContext{
+		RequestClient: requests.RequestClient{
 			Url: "https://api.spotify.com/",
 		},
 	}
@@ -32,49 +33,60 @@ type QueryError struct {
 	Err   error
 }
 
-func (c api) SetUserToken(token string) api {
+func (c ApiContext) SetUserToken(token string) ApiContext {
 	c.userToken = token
-
-	c.ApiClient.Header = map[string][]string{
+	c.RequestClient.Header = map[string][]string{
 		"authorization": {fmt.Sprintf("Bearer %s", token)},
 	}
 	return c
 }
 
 // GetPlayNow
-// docs api:
+// docs ApiContext:
 // https://developer.spotify.com/documentation/web-api/reference/player/get-the-users-currently-playing-track/
-func (c *api) GetPlayNow() (spotify_type.CurrentlyPlaying, error) {
+func (c *ApiContext) GetPlayNow() (spotify_type.CurrentlyPlaying, error) {
 	r := spotify_type.CurrentlyPlaying{}
-	response, err := c.HttpClient("GET", "v1/me/player/currently-playing", nil, nil, &r, nil)
 
+	req := requests.Request{
+		Method: http.MethodGet,
+		Uri:    "v1/me/player/currently-playing",
+	}
+	res := requests.Response{
+		Struct: &r,
+	}
+	err := c.NewRequest(&req, &res)
 	if err != nil {
 		return r, NotValidTokenError
 	}
-
-	if response.Code != 200 {
+	if res.Code != http.StatusOK {
 		return r, NotFoundError
 	}
 	return r, nil
 }
 
 // GetHistory
-// docs api:
+// docs ApiContext:
 // https://developer.spotify.com/documentation/web-api/reference/player/get-recently-played/
-func (c *api) GetHistory() (spotify_type.RecentlyPlayed, error) {
+func (c *ApiContext) GetHistory() (spotify_type.RecentlyPlayed, error) {
 	r := spotify_type.RecentlyPlayed{}
-	response, err := c.HttpClient("GET", "v1/me/player/recently-played?limit=47", nil, nil, &r, nil)
+	req := requests.Request{
+		Method: http.MethodGet,
+		Uri:    "v1/me/player/recently-played?limit=47",
+	}
+	res := requests.Response{
+		Struct: &r,
+	}
+	err := c.NewRequest(&req, &res)
 	if err != nil {
 		return r, NotValidTokenError
 	}
-
-	if response.Code != 200 {
+	if res.Code != http.StatusOK {
 		return r, NotFoundError
 	}
 	return r, nil
 }
 
-func (c *api) Play(spotifyUri string) error {
+func (c *ApiContext) Play(spotifyUri string) error {
 	rawData := map[string]interface{}{}
 	rawData["uris"] = []string{
 		spotifyUri,
@@ -88,26 +100,76 @@ func (c *api) Play(spotifyUri string) error {
 	//	}
 	//}
 
-	r, err := c.HttpClient("PUT", "v1/me/player/play", rawData, nil, nil, nil)
-	_, _ = r, err
+	req := requests.Request{
+		Method:   http.MethodPut,
+		Uri:      "v1/me/player/play",
+		JsonBody: rawData,
+	}
+	res := requests.Response{}
+
+	err := c.NewRequest(&req, &res)
+	if err != nil {
+		return NotValidTokenError
+	}
+	if res.Code != http.StatusNoContent {
+		return NotFoundError
+	}
+
 	return nil
 }
 
-func (c *api) AddQueue(spotifyUri string) error {
-	r, err := c.HttpClient("POST", fmt.Sprintf("v1/me/player/queue?uri=%s", spotifyUri), nil, nil, nil, nil)
-	_, _ = r, err
+func (c *ApiContext) AddQueue(spotifyUri string) error {
+	req := requests.Request{
+		Method: http.MethodPost,
+		Uri:    fmt.Sprintf("v1/me/player/queue?uri=%s", spotifyUri),
+	}
+	res := requests.Response{}
+
+	err := c.NewRequest(&req, &res)
+	if err != nil {
+		return NotValidTokenError
+	}
+	if res.Code != http.StatusNoContent {
+		return NotFoundError
+	}
 	return nil
 }
 
-func (c *api) GetPlayer() (spotify_type.Player, error) {
+func (c *ApiContext) GetPlayer() (spotify_type.Player, error) {
 	r := spotify_type.Player{}
-	raw, err := c.HttpClient("GET", "v1/me/player", nil, nil, &r, nil)
-	_ = raw
+
+	req := requests.Request{
+		Method: http.MethodGet,
+		Uri:    "v1/me/player",
+	}
+	res := requests.Response{
+		Struct: &r,
+	}
+
+	err := c.NewRequest(&req, &res)
+	if err != nil {
+		return r, NotValidTokenError
+	}
+	if res.Code != http.StatusOK {
+		return r, NotFoundError
+	}
+
 	return r, err
 }
 
-func (c *api) Next() error {
-	r, err := c.HttpClient("POST", "v1/me/player/next", nil, nil, nil, nil)
-	_, _ = r, err
-	return err
+func (c *ApiContext) Next() error {
+	req := requests.Request{
+		Method: http.MethodPost,
+		Uri:    "v1/me/player/next",
+	}
+	res := requests.Response{}
+
+	err := c.NewRequest(&req, &res)
+	if err != nil {
+		return NotValidTokenError
+	}
+	if res.Code != http.StatusOK {
+		return NotFoundError
+	}
+	return nil
 }

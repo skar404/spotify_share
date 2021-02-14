@@ -28,5 +28,5 @@ func (c *CommandContext) StartCommand() {
 	//if len(c.command.Args) > 0 {
 	//	m = fmt.Sprintf(TemplateMessageStart, "@spotify_share_bot")
 	//}
-	_ = telegram.TgClient.SendMessage(c.update.Message.Chat.Id, m, &rm)
+	_ = telegram.Client.SendMessage(c.update.Message.Chat.Id, m, &rm)
 }
