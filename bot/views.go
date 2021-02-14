@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -26,24 +27,35 @@ type FakeUser struct {
 	Block  bool
 }
 
-func BotRouter(update *telegram.Update, handler *handler.Handler) {
+type Bot struct {
+	ctx context.Context
 
-	// FIXME mey be create struct
+	update  *telegram.Update
+	handler *handler.Handler
+}
+
+func Router(update *telegram.Update, handler *handler.Handler) {
+	bot := Bot{
+		context.Background(),
+		update,
+		handler,
+	}
+
 	if update.Message.MessageId != 0 {
-		CommandHandler(update, handler)
+		bot.CommandHandler()
 	} else if update.InlineQuery.Id != "" {
-		InlineQueryHandler(update, handler)
+		bot.InlineQueryHandler()
 	} else if update.CallbackQuery.Id != "" {
-		CallbackQueryHandler(update, handler)
+		bot.CallbackQueryHandler()
 	}
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
-	callback := update.CallbackQuery
+func (b *Bot) CallbackQueryHandler() {
+	callback := b.update.CallbackQuery
 	conn := model.Conn{
-		DB: handler.DB,
+		DB: b.handler.DB,
 	}
 	user, err := conn.GetUser(callback.From.Id)
 
@@ -117,12 +129,12 @@ func RandStringBytes(n int) string {
 }
 
 // TODO refactoring !!!
-func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
+func (b *Bot) InlineQueryHandler() {
 	conn := model.Conn{
-		DB: handler.DB,
+		DB: b.handler.DB,
 	}
 
-	user, err := GetOrCreateUser(&update.InlineQuery.From, handler)
+	user, err := GetOrCreateUser(&b.update.InlineQuery.From, b.handler)
 
 	if err != nil {
 		return
@@ -168,7 +180,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 					playNow.Item.Name,
 					playNow.Item.Artists[0].Name,
 					playNow.Item.Album.Name,
-					update.InlineQuery.Id),
+					b.update.InlineQuery.Id),
 				"parse_mode": "Markdown",
 				"photo_url":  playNow.Item.Album.Images[0].URL,
 				"reply_markup": map[string]interface{}{
@@ -200,7 +212,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 				"caption": fmt.Sprintf("%s\n%s\nInline ID=%s",
 					value.Track.Artists[0].Name,
 					value.Track.Album.Name,
-					update.InlineQuery.Id),
+					b.update.InlineQuery.Id),
 				"is_personal": true,
 				"photo_url":   value.Track.Album.Images[0].URL,
 				//"input_message_content": map[string]interface{}{
@@ -221,7 +233,7 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 				"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
 			})
 		}
-		err = telegram.Client.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
+		err = telegram.Client.AnswerInlineQuery(b.update.InlineQuery.Id, tmpList)
 		if err != nil {
 			log.Error("AnswerInlineQuery err=", err)
 		}
@@ -231,20 +243,21 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 			"switch_pm_text":      "login in spotify ...",
 			"switch_pm_parameter": "inline_redirect",
 		}
-		err = telegram.Client.AnswerInlineQueryTmp(update.InlineQuery.Id, r)
+		err = telegram.Client.AnswerInlineQueryTmp(b.update.InlineQuery.Id, r)
 		log.Info("app")
 
 	}
 }
 
-func CommandHandler(update *telegram.Update, handler *handler.Handler) {
-	user, err := GetOrCreateUser(&update.Message.From, handler)
+func (b *Bot) CommandHandler() {
+
+	user, err := GetOrCreateUser(&b.update.Message.From, b.handler)
 	if err != nil {
 		log.Error("error create user err=", err)
 		return
 	}
 
-	command, err := getCommand(update.Message.Text)
+	command, err := getCommand(b.update.Message.Text)
 	// обрабатываем только команды, если нет то скипаем
 	if err != nil {
 		log.Info("skip text err=", err)
@@ -252,22 +265,24 @@ func CommandHandler(update *telegram.Update, handler *handler.Handler) {
 	}
 
 	if user.Active == false {
-		// skip block user ...
-		log.Info("skip block user ...=")
+		log.Info("skip block user =")
 		return
 	}
-	log.Infof("send message: %s", update.Message.Text)
+	log.Infof("send message: %s", b.update.Message.Text)
 
 	commands := CommandContext{
-		update:  update,
+		update:  b.update,
 		user:    user,
 		command: command,
+		DB:      b.handler.DB,
 	}
 
 	switch command.Name {
 	case "start":
 		commands.StartCommand()
 	case "help":
+
+	case "setting":
 
 	case "logout":
 

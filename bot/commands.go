@@ -5,12 +5,15 @@ import (
 	"github.com/skar404/spotify_share/model"
 	"github.com/skar404/spotify_share/spotify"
 	"github.com/skar404/spotify_share/telegram"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CommandContext struct {
 	update  *telegram.Update
 	user    *model.User
 	command *Command
+
+	DB *mongo.Database
 }
 
 func (c *CommandContext) StartCommand() {
@@ -29,4 +32,8 @@ func (c *CommandContext) StartCommand() {
 	//	m = fmt.Sprintf(TemplateMessageStart, "@spotify_share_bot")
 	//}
 	_ = telegram.Client.SendMessage(c.update.Message.Chat.Id, m, &rm)
+}
+
+func (c *CommandContext) Help() {
+
 }
