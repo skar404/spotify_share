@@ -73,7 +73,7 @@ func (h *Handler) OAuthSpotify(c echo.Context) (err error) {
 
 func (h *Handler) Ping(c echo.Context) (err error) {
 	ctx := context.Background()
-	if err := h.DBMongoDB.Ping(ctx, readpref.Primary()); err != nil {
+	if err := h.DBConn.Ping(ctx, readpref.Primary()); err != nil {
 		errJson := c.JSON(http.StatusBadGateway, map[string]bool{"ok": false})
 		if errJson != nil {
 			log.Error(errJson)

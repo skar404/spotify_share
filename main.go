@@ -32,32 +32,19 @@ func main() {
 
 	appMode := global.AppMode
 
-	// Database connection
-	url := fmt.Sprintf("mongodb://%s:%s@%s/%s?replicaSet=%s",
-		global.DBUser,
-		global.DBPass,
-		global.DBHost,
-		global.DBName,
-		global.DBRs)
-
-	if global.DBCACERT != "" {
-		url = fmt.Sprintf("%s&tls=true&tlsCaFile=%s", url, global.DBCACERT)
-	}
-
+	url := constructDBUrl()
 	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
 	if err != nil {
 		panic(err)
 	}
 
 	defer conn.Disconnect(context.Background())
-
 	db := conn.Database(global.DBName)
-	log.Info("conn to OldDB", db.Name())
 
 	// Initialize handler
 	h := &handler.Handler{
-		DBMongoDB: conn,
-		DB:        db,
+		DBConn: conn,
+		DB:     db,
 	}
 
 	lockChanel := make(chan bool)
@@ -124,6 +111,27 @@ func runGetUpdate(telegramToken string, h *handler.Handler) {
 			updateId = item.UpdateId + 1
 		}
 	}
+}
+
+func constructDBUrl() string {
+	url := fmt.Sprintf("mongodb://%s:%s@%s/%s?",
+		global.DBUser,
+		global.DBPass,
+		global.DBHost,
+		global.DBName)
+
+	if global.DBAuthSource != "" {
+		url = fmt.Sprintf("%s&authSource=%s", url, global.DBAuthSource)
+	}
+
+	if global.DBRs != "" {
+		url = fmt.Sprintf("%s&replicaSet=%s", url, global.DBRs)
+	}
+
+	if global.DBCACERT != "" {
+		url = fmt.Sprintf("%s&tls=true&tlsCaFile=%s", url, global.DBCACERT)
+	}
+	return url
 }
 
 func runHttpServer(webhookToken string, handler *handler.Handler) {

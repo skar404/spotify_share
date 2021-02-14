@@ -30,14 +30,13 @@ var (
 
 	AppMode = os.Getenv("APP_MOD")
 
-	DBUrl = getEnv("DB_URL", "root:example@localhost")
-
-	DBRs     = getEnv("DB_RS", "")
-	DBName   = getEnv("DB_NAME", "")
-	DBHost   = getEnv("DB_HOST", "")
-	DBUser   = getEnv("DB_USER", "")
-	DBPass   = getEnv("DB_PASS", "")
-	DBCACERT = getEnv("DB_CACERT", "")
+	DBRs         = getEnv("DB_RS", "")
+	DBName       = getEnv("DB_NAME", "")
+	DBAuthSource = getEnv("DB_AUTH_SOURCE", "")
+	DBHost       = getEnv("DB_HOST", "")
+	DBUser       = getEnv("DB_USER", "")
+	DBPass       = getEnv("DB_PASS", "")
+	DBCACERT     = getEnv("DB_CACERT", "")
 
 	JWTToken     = getEnv("JWT_TOKEN", "TEST_TOKEN")
 	JWTTokenByte = []byte(JWTToken)
