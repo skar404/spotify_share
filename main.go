@@ -22,6 +22,9 @@ import (
 )
 
 func main() {
+	mode := global.AppMode
+	log.Infof("starting app, config: mode=%s, debug=%t", mode, global.Debug)
+
 	initStopSignal()
 	// App env
 	webhookToken := global.WebhookToken
@@ -29,8 +32,6 @@ func main() {
 
 	clientId := global.ClientId
 	clientSecret := global.ClientSecret
-
-	appMode := global.AppMode
 
 	url := constructDBUrl()
 	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
@@ -48,21 +49,20 @@ func main() {
 	}
 
 	lockChanel := make(chan bool)
-	if appMode == "CLI" {
+	if mode == "CLI" {
 		runCLI(clientId, clientSecret)
-	} else if appMode == "WEB" {
+	} else if mode == "WEB" {
 		// set webhook
-	} else if appMode == "GET_UPDATES" {
+	} else if mode == "GET_UPDATES" {
 		// only dev mode:
 		// ... run `for true` and lock web server
 		go func() {
-			log.Info("create goroutines")
 			runGetUpdate(telegramToken, h)
 			lockChanel <- true
 		}()
 	}
 
-	if appMode != "CLI" {
+	if mode != "CLI" {
 		runHttpServer(webhookToken, h)
 		<-lockChanel
 	}
@@ -82,11 +82,11 @@ func initStopSignal() {
 func runCLI(clientId, clientSecret string) {
 	token, refreshToken, err := commands.CreateToken(clientId, clientSecret)
 	if err != nil {
-		_ = fmt.Errorf("Error create token")
+		fmt.Printf("error create token %e\n", err)
 		return
 	}
 
-	fmt.Println("token", token, refreshToken)
+	fmt.Printf("token=%s, refreshTo¬ken=%s\n", token, refreshToken)
 }
 
 func runGetUpdate(telegramToken string, h *handler.Handler) {
@@ -135,6 +135,8 @@ func constructDBUrl() string {
 
 func runHttpServer(webhookToken string, handler *handler.Handler) {
 	e := echo.New()
+	e.Debug = global.Debug
+
 	// Enable metrics middleware
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
@@ -147,5 +149,5 @@ func runHttpServer(webhookToken string, handler *handler.Handler) {
 	e.GET("/spotify", handler.OAuthSpotify)
 	e.GET("/ping", handler.Ping)
 
-	e.Logger.Fatal(e.Start("0.0.0.0:1323"))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:1323", global.AppHost)))
 }

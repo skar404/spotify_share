@@ -2,9 +2,14 @@ package global
 
 import (
 	"os"
+	"strconv"
 )
 
 var (
+	Debug, _ = strconv.ParseBool(getEnv("DEBUG", "false"))
+	AppHost  = getEnv("APP_HOST", "0.0.0.0")
+	AppMode  = os.Getenv("APP_MOD")
+
 	WebhookToken  = os.Getenv("TELEGRAM_WEBHOOK_TOKEN")
 	TelegramToken = os.Getenv("TELEGRAM_TOKEN")
 
@@ -27,8 +32,6 @@ var (
 	ClientId     = os.Getenv("CLIENT_ID")
 	ClientSecret = os.Getenv("CLIENT_SECRET")
 	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost:1323/spotify")
-
-	AppMode = os.Getenv("APP_MOD")
 
 	DBRs         = getEnv("DB_RS", "")
 	DBName       = getEnv("DB_NAME", "")
