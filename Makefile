@@ -1,4 +1,4 @@
-VERSION:=1.0.0
+VERSION:=1.1.0
 IMAGE:=cr.yandex/crpkmcbem8um7rd1gk5i/spotify_share
 
 build:
