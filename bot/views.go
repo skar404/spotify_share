@@ -102,6 +102,7 @@ func (b *Bot) CallbackQueryHandler() {
 		// - включать трек
 		// - подмешивать контекст (желательно не тераю очередь)
 
+		// FIXME думаю стоит добавить лок, асинхрон может сотворить страшное!!!
 		song, _ := api.GetPlayNow()
 		if err := api.AddQueue(splitData[1]); err != nil {
 			log.Errorf("play AddQueue song error=%s", err)
