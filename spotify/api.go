@@ -55,9 +55,15 @@ func (c *ApiContext) GetPlayNow() (spotify_type.CurrentlyPlaying, error) {
 		Struct: &r,
 	}
 	err := c.NewRequest(&req, &res)
+	if res.Code == http.StatusNoContent {
+		return r, NotFoundError
+	}
 	if err != nil {
 		return r, NotValidTokenError
 	}
+
+	// If the device is not found, the request will return 404 NOT FOUND response code.
+	// If the user making the request is non-premium, a 403 FORBIDDEN response code will be returned.
 	if res.Code != http.StatusOK {
 		return r, NotFoundError
 	}

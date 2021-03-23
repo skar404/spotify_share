@@ -2,6 +2,8 @@ package bot
 
 import (
 	"errors"
+	"fmt"
+	"github.com/skar404/spotify_share/spotify"
 	"strings"
 	"time"
 
@@ -67,4 +69,75 @@ func GetOrCreateUser(tgUser *telegram.User, h *handler.Handler) (*model.User, er
 		return nil, err
 	}
 	return u, nil
+}
+
+func makePhotoInline(h []spotify.History) []interface{} {
+	// FIXME перепесать это де**** на struct
+	//  p.s. автор данного куса не несет ответсвенность за ваше психическое состояние
+
+	tmpList := make([]interface{}, len(h))
+	for i := range h {
+		link := &h[i]
+
+		tmpList[i] = map[string]interface{}{
+			"type":  "photo",
+			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"title": link.Name,
+			"description": fmt.Sprintf("%s",
+				link.Artists[0].Name),
+			"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***",
+				link.Name, link.Artists[0].Name, link.Album.Name),
+			"photo_url":  link.Img,
+			"parse_mode": "Markdown",
+			"reply_markup": map[string]interface{}{
+				"inline_keyboard": [][]map[string]interface{}{{
+					{
+						"text":          "Play",
+						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
+					},
+					{
+						"text":          "Add",
+						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
+					},
+				}},
+			},
+			"thumb_url": link.Img,
+		}
+	}
+	return tmpList
+}
+
+func makeAudioInline(h []spotify.History) []interface{} {
+	// FIXME перепесать это де**** на struct
+	//  p.s. автор данного куса не несет ответсвенность за ваше психическое состояние
+
+	tmpList := make([]interface{}, len(h))
+	for i := range h {
+		link := &h[i]
+
+		tmpList[i] = map[string]interface{}{
+			"type":           "audio",
+			"id":             fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"audio_url":      link.PreviewURL,
+			"title":          link.Name,
+			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", link.URL),
+			"parse_mode":     "Markdown",
+			"performer":      link.Artists[0].Name,
+			"audio_duration": 30, //
+			"reply_markup": map[string]interface{}{
+				"inline_keyboard": [][]map[string]interface{}{{
+					{
+						"text":          "Play",
+						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
+					},
+					{
+						"text":          "Add",
+						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
+					},
+				}},
+			},
+			"thumb_url": link.Img,
+		}
+	}
+	return tmpList
 }
