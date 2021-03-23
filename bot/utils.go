@@ -133,7 +133,8 @@ func makeAudioInline(h []spotify.History) []interface{} {
 			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", link.URL),
 			"parse_mode":     "Markdown",
 			"performer":      link.Artists[0].Name,
-			"audio_duration": 30, //
+			"audio_duration": 30, // вроде по всем трекам отдает трек 30c, если найду меньше нужно потестит, НО это не критично
+			// идея скачивать трек ОЧЕНЬ ПЛОХАЯ
 			"reply_markup": map[string][][]map[string]string{
 				"inline_keyboard": {{
 					{
