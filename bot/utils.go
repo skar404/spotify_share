@@ -94,8 +94,8 @@ func makePhotoInline(h []spotify.History) []interface{} {
 				link.Name, link.Artists[0].Name, link.Album.Name),
 			"photo_url":  link.Img,
 			"parse_mode": "Markdown",
-			"reply_markup": map[string]interface{}{
-				"inline_keyboard": [][]map[string]interface{}{{
+			"reply_markup": map[string][][]map[string]string{
+				"inline_keyboard": {{
 					{
 						"text":          "Play",
 						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
@@ -134,8 +134,8 @@ func makeAudioInline(h []spotify.History) []interface{} {
 			"parse_mode":     "Markdown",
 			"performer":      link.Artists[0].Name,
 			"audio_duration": 30, //
-			"reply_markup": map[string]interface{}{
-				"inline_keyboard": [][]map[string]interface{}{{
+			"reply_markup": map[string][][]map[string]string{
+				"inline_keyboard": {{
 					{
 						"text":          "Play",
 						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
