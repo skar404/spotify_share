@@ -5,6 +5,6 @@ import (
 )
 
 type Handler struct {
-	DB        *mongo.Database
-	DBMongoDB *mongo.Client
+	DB     *mongo.Database
+	DBConn *mongo.Client
 }

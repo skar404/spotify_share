@@ -1,12 +1,11 @@
 package bot
 
 import (
-	"fmt"
+	"context"
+	"errors"
+	"github.com/labstack/gommon/log"
 	"math/rand"
 	"strings"
-	"time"
-
-	"github.com/labstack/gommon/log"
 
 	"github.com/skar404/spotify_share/handler"
 	_ "github.com/skar404/spotify_share/handler"
@@ -25,24 +24,35 @@ type FakeUser struct {
 	Block  bool
 }
 
-func BotRouter(update *telegram.Update, handler *handler.Handler) {
+type Bot struct {
+	ctx context.Context
 
-	// FIXME mey be create struct
+	update  *telegram.Update
+	handler *handler.Handler
+}
+
+func Router(update *telegram.Update, handler *handler.Handler) {
+	bot := Bot{
+		context.Background(),
+		update,
+		handler,
+	}
+
 	if update.Message.MessageId != 0 {
-		CommandHandler(update, handler)
+		bot.CommandHandler()
 	} else if update.InlineQuery.Id != "" {
-		InlineQueryHandler(update, handler)
+		bot.InlineQueryHandler()
 	} else if update.CallbackQuery.Id != "" {
-		CallbackQueryHandler(update, handler)
+		bot.CallbackQueryHandler()
 	}
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
-	callback := update.CallbackQuery
+func (b *Bot) CallbackQueryHandler() {
+	callback := b.update.CallbackQuery
 	conn := model.Conn{
-		DB: handler.DB,
+		DB: b.handler.DB,
 	}
 	user, err := conn.GetUser(callback.From.Id)
 
@@ -51,14 +61,31 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		data.Url = "t.me/spotify_share_bot?start=LOGIN"
 	}
 
-	_ = telegram.TgClient.AnswerCallbackQuery(callback.Id, &data)
+	_ = telegram.Client.AnswerCallbackQuery(callback.Id, &data)
 
 	if user == nil || user.Spotify.Token == nil {
 		return
 	}
-	token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
 
-	api := spotify.ApiClient.SetUserToken(token.AccessToken)
+	token := user.Spotify.Token.User
+	newToken, err := spotify.RefreshToken(user.Spotify.Token.Refresh, user.Spotify.Token.Expired)
+	if err == nil {
+		log.Infof("refresh user token u_id=%s", user.Id)
+		if err := conn.UpdateSpotifyToken(&user.Id, &model.Spotify{Token: &model.SpotifyToken{
+			Refresh: user.Spotify.Token.Refresh,
+			User:    newToken.AccessToken,
+			Expired: newToken.Expired,
+		}}); err != nil {
+			log.Errorf("error update token u_id=%s err=%v", user.Id, err)
+			return
+		}
+		token = newToken.AccessToken
+	} else if !errors.Is(err, spotify.TokenNotExpired) {
+		log.Errorf("error refresh token u_id=%s err=%v", user.Id, err)
+		return
+	}
+
+	api := spotify.ApiClient.SetUserToken(token)
 
 	splitData := strings.SplitN(callback.Data, "::", 2)
 
@@ -66,7 +93,6 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 		log.Info("skip ist=", splitData, ", len=", len(splitData))
 		return
 	}
-	log.Info(splitData[0])
 
 	if splitData[0] == "PLAY" {
 		// Пока не придумал как можно выклюить трек и сохранить контекст который до этого слушал пользоватлеь...
@@ -78,10 +104,15 @@ func CallbackQueryHandler(update *telegram.Update, handler *handler.Handler) {
 
 		// song, err := api.GetPlayNow()
 		// context := api.AddQueue(song.Item.URI)
-		_ = api.Play(splitData[1])
+		if err := api.Play(splitData[1]); err != nil {
+			log.Infof("play song error=%s", err)
+		}
+
 		//_ = api.AddQueue(splitData[1])
 	} else if splitData[0] == "ADD" {
-		_ = api.AddQueue(splitData[1])
+		if err := api.AddQueue(splitData[1]); err != nil {
+			log.Infof("add queue error=%s", err)
+		}
 	}
 }
 
@@ -95,90 +126,48 @@ func RandStringBytes(n int) string {
 }
 
 // TODO refactoring !!!
-func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
-	user, err := GetOrCreateUser(&update.InlineQuery.From, handler)
+func (b *Bot) InlineQueryHandler() {
+	conn := model.Conn{
+		DB: b.handler.DB,
+	}
+
+	user, err := GetOrCreateUser(&b.update.InlineQuery.From, b.handler)
 
 	if err != nil {
 		return
 	}
 	if user.Spotify.Token != nil {
-		var tmpList []interface{}
-		token, _ := spotify.OAuthClient.RefreshToken(user.Spotify.Token.Refresh)
-
-		api := spotify.ApiClient.SetUserToken(token.AccessToken)
-		r, _ := api.GetHistory()
-		playNow, err := api.GetPlayNow()
-
+		token := user.Spotify.Token.User
+		newToken, err := spotify.RefreshToken(user.Spotify.Token.Refresh, user.Spotify.Token.Expired)
 		if err == nil {
-			tmpList = append(tmpList, map[string]interface{}{
-				"type":  "photo",
-				"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-				"title": playNow.Item.Name,
-				"description": fmt.Sprintf("%s",
-					playNow.Item.Artists[0].Name),
-				"is_personal": true,
-				//"input_message_content": map[string]interface{}{
-				//	"message_text": fmt.Sprintf("test ![img](%s)", playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL),
-				//	"parse_mode":   "Markdown",
-				//},
-				"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***\ndebug info: inline ID=%s",
-					playNow.Item.Name,
-					playNow.Item.Artists[0].Name,
-					playNow.Item.Album.Name,
-					update.InlineQuery.Id),
-				"parse_mode": "Markdown",
-				"photo_url":  playNow.Item.Album.Images[0].URL,
-				"reply_markup": map[string]interface{}{
-					"inline_keyboard": [][]map[string]interface{}{{
-						{
-							"text":          "Play",
-							"callback_data": fmt.Sprintf("PLAY::%s", playNow.Item.URI),
-						},
-						{
-							"text":          "Add",
-							"callback_data": fmt.Sprintf("ADD::%s", playNow.Item.URI),
-						},
-						//{
-						//	"text":          "Sync",
-						//	"callback_data": fmt.Sprintf("SYNC:%s", playNow.Item.URI),
-						//},
-					}},
-				},
-				"thumb_url": playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL,
-			})
+			log.Infof("refresh user token u_id=%s", user.Id)
+			if err := conn.UpdateSpotifyToken(&user.Id, &model.Spotify{Token: &model.SpotifyToken{
+				Refresh: user.Spotify.Token.Refresh,
+				User:    newToken.AccessToken,
+				Expired: newToken.Expired,
+			}}); err != nil {
+				log.Errorf("error update token u_id=%s err=%v", user.Id, err)
+				return
+			}
+			token = newToken.AccessToken
+		} else if !errors.Is(err, spotify.TokenNotExpired) {
+			log.Errorf("error refresh token u_id=%s err=%v", user.Id, err)
+			return
 		}
 
-		for _, value := range r.Items {
-			tmpList = append(tmpList, map[string]interface{}{
-				"type":        "photo",
-				"id":          fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-				"title":       value.Track.Name,
-				"description": fmt.Sprintf("%s"),
-				"caption": fmt.Sprintf("%s\n%s\nInline ID=%s",
-					value.Track.Artists[0].Name,
-					value.Track.Album.Name,
-					update.InlineQuery.Id),
-				"is_personal": true,
-				"photo_url":   value.Track.Album.Images[0].URL,
-				//"input_message_content": map[string]interface{}{
-				//	"message_text": "test",
-				//	"parse_mode":   "Markdown",
-				"parse_mode": "Markdown",
-				"reply_markup": map[string]interface{}{
-					"inline_keyboard": [][]map[string]interface{}{{
-						{
-							"text":          "Play",
-							"callback_data": fmt.Sprintf("PLAY::%s", value.Track.URI),
-						},
-						{
-							"text":          "Add",
-							"callback_data": fmt.Sprintf("ADD::%s", value.Track.URI),
-						}}},
-				},
-				"thumb_url": value.Track.Album.Images[len(value.Track.Album.Images)-1].URL,
-			})
+		api := spotify.ApiClient.SetUserToken(token)
+		historyList, err := api.GetAllHistory()
+		if err != nil {
+			// нужно бы отдавать ошибку в telegram callback
+			log.Errorf("error GetAllHistory token u_id=%s err=%v", user.Id, err)
+			return
 		}
-		err = telegram.TgClient.AnswerInlineQuery(update.InlineQuery.Id, tmpList)
+
+		//tmpList := makePhotoInline(historyList)
+
+		tmpList := makeAudioInline(historyList)
+
+		err = telegram.Client.AnswerInlineQuery(b.update.InlineQuery.Id, tmpList)
 		if err != nil {
 			log.Error("AnswerInlineQuery err=", err)
 		}
@@ -188,46 +177,52 @@ func InlineQueryHandler(update *telegram.Update, handler *handler.Handler) {
 			"switch_pm_text":      "login in spotify ...",
 			"switch_pm_parameter": "inline_redirect",
 		}
-		err = telegram.TgClient.AnswerInlineQueryTmp(update.InlineQuery.Id, r)
+		err = telegram.Client.AnswerInlineQueryTmp(b.update.InlineQuery.Id, r)
 		log.Info("app")
-
 	}
 }
 
-func CommandHandler(update *telegram.Update, handler *handler.Handler) {
-	user, err := GetOrCreateUser(&update.Message.From, handler)
+func (b *Bot) CommandHandler() {
+
+	user, err := GetOrCreateUser(&b.update.Message.From, b.handler)
 	if err != nil {
 		log.Error("error create user err=", err)
 		return
 	}
 
-	command, err := getCommand(update.Message.Text)
-	// Обрабатываем только команды, если нет то скипаем
+	command, err := getCommand(b.update.Message.Text)
+	// обрабатываем только команды, если нет то скипаем
 	if err != nil {
 		log.Info("skip text err=", err)
 		return
 	}
 
 	if user.Active == false {
-		// skip block user ...
-		log.Info("skip block user ...=")
+		log.Info("skip block user =")
 		return
 	}
-	log.Infof("send message: %s", update.Message.Text)
+	log.Infof("send message: %s", b.update.Message.Text)
 
 	commands := CommandContext{
-		update:  update,
+		update:  b.update,
 		user:    user,
 		command: command,
+		DB:      b.handler.DB,
 	}
 
 	switch command.Name {
 	case "start":
 		commands.StartCommand()
 	case "help":
+		commands.Help()
+	case "ping":
+		_ = telegram.Client.SendMessage(b.update.Message.Chat.Id, "/pong", nil, nil)
+	case "pong":
+		_ = telegram.Client.SendMessage(b.update.Message.Chat.Id, "/ping", nil, nil)
+	case "setting":
 
 	case "logout":
-
+		// https://support.spotify.com/us/article/how-to-log-out/
 	default:
 
 	}

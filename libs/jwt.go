@@ -17,7 +17,7 @@ func CreateJWT(userId int64) string {
 	mySigningKey := global.JWTTokenByte
 
 	date := time.Now()
-	date = date.Add(30 * time.Minute)
+	date = date.Add(5 * time.Minute)
 
 	claims := JWTUser{
 		userId,

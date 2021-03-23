@@ -2,6 +2,8 @@ package bot
 
 import (
 	"errors"
+	"fmt"
+	"github.com/skar404/spotify_share/spotify"
 	"strings"
 	"time"
 
@@ -67,4 +69,86 @@ func GetOrCreateUser(tgUser *telegram.User, h *handler.Handler) (*model.User, er
 		return nil, err
 	}
 	return u, nil
+}
+
+func makePhotoInline(h []spotify.History) []interface{} {
+	// FIXME перепесать это де**** на struct
+	//  p.s. автор данного куса не несет ответсвенность за ваше психическое состояние
+
+	tmpList := make([]interface{}, len(h))
+	for i := range h {
+		link := &h[i]
+
+		title := link.Name
+		if link.PlayNow {
+			title = "▶️ ️" + title
+		}
+
+		tmpList[i] = map[string]interface{}{
+			"type":  "photo",
+			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"title": title,
+			"description": fmt.Sprintf("%s",
+				link.Artists[0].Name),
+			"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***",
+				link.Name, link.Artists[0].Name, link.Album.Name),
+			"photo_url":  link.Img,
+			"parse_mode": "Markdown",
+			"reply_markup": map[string][][]map[string]string{
+				"inline_keyboard": {{
+					{
+						"text":          "Play",
+						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
+					},
+					{
+						"text":          "Add",
+						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
+					},
+				}},
+			},
+			"thumb_url": link.Img,
+		}
+	}
+	return tmpList
+}
+
+func makeAudioInline(h []spotify.History) []interface{} {
+	// FIXME перепесать это де**** на struct
+	//  p.s. автор данного куса не несет ответсвенность за ваше психическое состояние
+
+	tmpList := make([]interface{}, len(h))
+	for i := range h {
+		link := &h[i]
+
+		title := link.Name
+		if link.PlayNow {
+			title = "▶️ ️" + title
+		}
+
+		tmpList[i] = map[string]interface{}{
+			"type":           "audio",
+			"id":             fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
+			"audio_url":      link.PreviewURL,
+			"title":          title,
+			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", link.URL),
+			"parse_mode":     "Markdown",
+			"performer":      link.Artists[0].Name,
+			"audio_duration": 30, // вроде по всем трекам отдает трек 30c, если найду меньше нужно потестит, НО это не критично
+			// идея скачивать трек ОЧЕНЬ ПЛОХАЯ
+			"reply_markup": map[string][][]map[string]string{
+				"inline_keyboard": {{
+					{
+						"text":          "Play",
+						"callback_data": fmt.Sprintf("PLAY::%s", link.URL),
+					},
+					{
+						"text":          "Add",
+						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
+					},
+				}},
+			},
+			"thumb_url": link.Img,
+		}
+	}
+	return tmpList
 }

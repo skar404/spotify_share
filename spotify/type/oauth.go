@@ -1,11 +1,8 @@
 package spotify_type
 
-import "github.com/skar404/spotify_share/rhttp"
-
 type TokenReq struct {
-	rhttp.Response
 	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
+	ExpiresIn   int64  `json:"expires_in"`
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
 }
