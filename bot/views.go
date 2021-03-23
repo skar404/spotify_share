@@ -104,14 +104,15 @@ func (b *Bot) CallbackQueryHandler() {
 
 		song, _ := api.GetPlayNow()
 		if err := api.AddQueue(splitData[1]); err != nil {
-			log.Infof("play AddQueue song error=%s", err)
+			log.Errorf("play AddQueue song error=%s", err)
 		}
 		if err := api.Next(); err != nil {
-			log.Infof("play AddQueue song error=%s", err)
+			log.Errorf("play Next song error=%s", err)
 		}
 
-		_ = api.AddQueue(song.Item.URI)
-
+		if song.Item.URI != "" {
+			_ = api.AddQueue(song.Item.URI)
+		}
 		// context := api.AddQueue(song.Item.URI)
 		//if err := api.Play(splitData[1]); err != nil {
 		//	log.Infof("play song error=%s", err)
