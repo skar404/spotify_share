@@ -176,7 +176,7 @@ func (b *Bot) InlineQueryHandler() {
 				//	"message_text": fmt.Sprintf("test ![img](%s)", playNow.Item.Album.Images[len(playNow.Item.Album.Images)-1].URL),
 				//	"parse_mode":   "Markdown",
 				//},
-				"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***\ndebug info: inline ID=%s",
+				"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***",
 					playNow.Item.Name,
 					playNow.Item.Artists[0].Name,
 					playNow.Item.Album.Name,
