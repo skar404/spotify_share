@@ -215,6 +215,10 @@ func (b *Bot) CommandHandler() {
 		commands.StartCommand()
 	case "help":
 		commands.Help()
+	case "ping":
+		_ = telegram.Client.SendMessage(b.update.Message.Chat.Id, "/pong", nil, nil)
+	case "pong":
+		_ = telegram.Client.SendMessage(b.update.Message.Chat.Id, "/ping", nil, nil)
 	case "setting":
 
 	case "logout":

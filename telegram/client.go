@@ -28,7 +28,7 @@ func Init() Context {
 	}
 }
 
-func (c *Context) SendMessage(chatId int64, text string, replyMarkup *InlineKeyboardReq) error {
+func (c *Context) SendMessage(chatId int64, text string, replyMarkup *InlineKeyboardReq, params *SendMessageParams) error {
 	jsonBody := map[string]interface{}{
 		"chat_id":    chatId,
 		"text":       text,
@@ -37,6 +37,12 @@ func (c *Context) SendMessage(chatId int64, text string, replyMarkup *InlineKeyb
 
 	if replyMarkup != nil && replyMarkup.ready == true {
 		jsonBody["reply_markup"] = replyMarkup
+	}
+
+	if params != nil {
+		if params.OffWebPreview {
+			jsonBody["disable_web_page_preview"] = params.OffWebPreview
+		}
 	}
 
 	req := requests.Request{

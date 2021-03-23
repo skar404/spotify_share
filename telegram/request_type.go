@@ -5,8 +5,8 @@ type InlineKeyboardButtonReq struct {
 	Url  string `json:"url"`
 	//LoginUrl LoginUser `json:"login_url"`
 	//CallbackData                 string `json:"callback_data"`
-	//SwitchInlineQuery            string `json:"switch_inline_query"`
-	//SwitchInlineQueryCurrentChat string `json:"switch_inline_query_current_chat"`
+	SwitchInlineQuery            string `json:"switch_inline_query"`
+	SwitchInlineQueryCurrentChat string `json:"switch_inline_query_current_chat"`
 	//CallbackGame CallbackGame `json:"callback_game"`
 	//Pay bool `json:"pay"`
 }
@@ -19,6 +19,10 @@ type InlineKeyboardReq struct {
 
 func (s *InlineKeyboardReq) Ready() {
 	s.ready = true
+}
+
+type SendMessageParams struct {
+	OffWebPreview bool
 }
 
 type AnswerCallbackReq struct {

@@ -32,23 +32,33 @@ func (c *CommandContext) StartCommand() {
 	//if len(c.command.Args) > 0 {
 	//	m = fmt.Sprintf(TemplateMessageStart, "@spotify_share_bot")
 	//}
-	_ = telegram.Client.SendMessage(c.update.Message.Chat.Id, m, &rm)
+	_ = telegram.Client.SendMessage(c.update.Message.Chat.Id, m, &rm, nil)
 }
 
 func (c *CommandContext) Help() {
 	text := `Этот бот позволяет делиться audio пользователям spotify
-для этого нужно ввести имя боа @spotify\_share\_bot 
+для этого нужно ввести имя бота @spotify\_share\_bot 
 и выбрать трек.
 
 Список треков получается из вашего Spotify  
 
 Если у вас есть вопросы, идеи, хотите помочь или нашли баг/опечатку, то напишите: 
- - автору @SaladMen
- - задачи на github https://github.com/skar404/spotify\_share/discussions/11
+ - автор @SaladMen
+ - дискуссия на [GitHub](https://github.com/skar404/spotify_share/discussions/11)
 
 Новости бота @spotify\_share`
 
-	if err := telegram.Client.SendMessage(c.update.Message.Chat.Id, text, nil); err != nil {
+	r := telegram.InlineKeyboardReq{
+		InlineKeyboard: [][]telegram.InlineKeyboardButtonReq{{{
+			Text:              "start bot",
+			SwitchInlineQuery: "",
+		}}},
+	}
+	r.Ready()
+
+	if err := telegram.Client.SendMessage(c.update.Message.Chat.Id, text, &r, &telegram.SendMessageParams{
+		OffWebPreview: true,
+	}); err != nil {
 		log.Errorf("error send message err=%s", err)
 	}
 

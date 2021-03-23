@@ -68,7 +68,14 @@ func (h *Handler) OAuthSpotify(c echo.Context) (err error) {
 		return c.Redirect(http.StatusMovedPermanently, botUrl+"?start=ERROR:UPDATE")
 	}
 
-	err = telegram.Client.SendMessage(userInfo.UserId, "вы успешно вошли", nil)
+	r := telegram.InlineKeyboardReq{
+		InlineKeyboard: [][]telegram.InlineKeyboardButtonReq{{{
+			Text:              "start bot",
+			SwitchInlineQuery: "",
+		}}},
+	}
+	r.Ready()
+	err = telegram.Client.SendMessage(userInfo.UserId, "вы успешно вошли", &r, nil)
 	return c.Redirect(http.StatusMovedPermanently, botUrl)
 }
 
