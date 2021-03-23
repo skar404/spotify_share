@@ -102,11 +102,20 @@ func (b *Bot) CallbackQueryHandler() {
 		// - включать трек
 		// - подмешивать контекст (желательно не тераю очередь)
 
-		// song, err := api.GetPlayNow()
-		// context := api.AddQueue(song.Item.URI)
-		if err := api.Play(splitData[1]); err != nil {
-			log.Infof("play song error=%s", err)
+		song, _ := api.GetPlayNow()
+		if err := api.AddQueue(splitData[1]); err != nil {
+			log.Infof("play AddQueue song error=%s", err)
 		}
+		if err := api.Next(); err != nil {
+			log.Infof("play AddQueue song error=%s", err)
+		}
+
+		_ = api.AddQueue(song.Item.URI)
+
+		// context := api.AddQueue(song.Item.URI)
+		//if err := api.Play(splitData[1]); err != nil {
+		//	log.Infof("play song error=%s", err)
+		//}
 
 		//_ = api.AddQueue(splitData[1])
 	} else if splitData[0] == "ADD" {
