@@ -214,11 +214,11 @@ func (b *Bot) CommandHandler() {
 	case "start":
 		commands.StartCommand()
 	case "help":
-
+		commands.Help()
 	case "setting":
 
 	case "logout":
-
+		// https://support.spotify.com/us/article/how-to-log-out/
 	default:
 
 	}

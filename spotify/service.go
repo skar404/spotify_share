@@ -18,6 +18,7 @@ type Album struct {
 
 type History struct {
 	ID         string
+	PlayNow    bool
 	URL        string
 	Name       string
 	PreviewURL string
@@ -30,6 +31,7 @@ func makeItem(item *spotify_type.Item) History {
 	h := History{
 		ID:         item.ID,
 		URL:        item.URI,
+		PlayNow:    true,
 		Name:       item.Name,
 		PreviewURL: item.PreviewURL,
 		Img:        item.Album.Images[0].URL,

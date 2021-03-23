@@ -79,10 +79,15 @@ func makePhotoInline(h []spotify.History) []interface{} {
 	for i := range h {
 		link := &h[i]
 
+		title := link.Name
+		if link.PlayNow {
+			title = "▶️ ️" + title
+		}
+
 		tmpList[i] = map[string]interface{}{
 			"type":  "photo",
 			"id":    fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
-			"title": link.Name,
+			"title": title,
 			"description": fmt.Sprintf("%s",
 				link.Artists[0].Name),
 			"caption": fmt.Sprintf("Name: ***%s***\nArtist: ***%s***\nAlbum: ***%s***",
@@ -115,11 +120,16 @@ func makeAudioInline(h []spotify.History) []interface{} {
 	for i := range h {
 		link := &h[i]
 
+		title := link.Name
+		if link.PlayNow {
+			title = "▶️ ️" + title
+		}
+
 		tmpList[i] = map[string]interface{}{
 			"type":           "audio",
 			"id":             fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
 			"audio_url":      link.PreviewURL,
-			"title":          link.Name,
+			"title":          title,
 			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", link.URL),
 			"parse_mode":     "Markdown",
 			"performer":      link.Artists[0].Name,

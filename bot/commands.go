@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"github.com/labstack/gommon/log"
 	"github.com/skar404/spotify_share/libs"
 	"github.com/skar404/spotify_share/model"
 	"github.com/skar404/spotify_share/spotify"
@@ -35,5 +36,20 @@ func (c *CommandContext) StartCommand() {
 }
 
 func (c *CommandContext) Help() {
+	text := `Этот бот позволяет делиться audio пользователям spotify
+для этого нужно ввести имя боа @spotify\_share\_bot 
+и выбрать трек.
+
+Список треков получается из вашего Spotify  
+
+Если у вас есть вопросы, идеи, хотите помочь или нашли баг/опечатку, то напишите: 
+ - автору @SaladMen
+ - задачи на github https://github.com/skar404/spotify\_share/discussions/11
+
+Новости бота @spotify\_share`
+
+	if err := telegram.Client.SendMessage(c.update.Message.Chat.Id, text, nil); err != nil {
+		log.Errorf("error send message err=%s", err)
+	}
 
 }
