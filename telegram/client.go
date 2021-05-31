@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -15,6 +16,8 @@ type Context struct {
 }
 
 var Client = Init()
+
+var BadRequest = errors.New("bad request")
 
 func Init() Context {
 	return Context{
@@ -87,7 +90,13 @@ func (c *Context) AnswerInlineQuery(Id string, tmpList []interface{}) error {
 		JsonBody: &jsonBody,
 	}
 	res := requests.Response{}
-	return c.NewRequest(&req, &res)
+	err := c.NewRequest(&req, &res)
+
+	if res.Code != http.StatusOK {
+		return fmt.Errorf("res=%+v err=%s", res, BadRequest)
+	}
+
+	return err
 }
 
 func (c *Context) AnswerInlineQueryTmp(Id string, jsonBody map[string]interface{}) error {
@@ -121,5 +130,6 @@ func (c *Context) AnswerCallbackQuery(Id string, data *AnswerCallbackReq) error 
 	res := requests.Response{
 		Struct: &r,
 	}
-	return c.NewRequest(&req, &res)
+	err := c.NewRequest(&req, &res)
+	return err
 }

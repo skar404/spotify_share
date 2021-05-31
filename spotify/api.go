@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/skar404/spotify_share/requests"
-	"net/http"
-
 	"github.com/skar404/spotify_share/spotify/type"
+	"net/http"
 )
 
 type ApiContext struct {
@@ -73,11 +72,11 @@ func (c *ApiContext) GetPlayNow() (spotify_type.CurrentlyPlaying, error) {
 // GetHistory
 // docs ApiContext:
 // https://developer.spotify.com/documentation/web-api/reference/player/get-recently-played/
-func (c *ApiContext) GetHistory() (spotify_type.RecentlyPlayed, error) {
+func (c *ApiContext) GetHistory(limit int) (spotify_type.RecentlyPlayed, error) {
 	r := spotify_type.RecentlyPlayed{}
 	req := requests.Request{
 		Method: http.MethodGet,
-		Uri:    "v1/me/player/recently-played?limit=47",
+		Uri:    fmt.Sprintf("v1/me/player/recently-played?limit=%d", limit),
 	}
 	res := requests.Response{
 		Struct: &r,
@@ -137,6 +136,26 @@ func (c *ApiContext) AddQueue(spotifyUri string) error {
 	}
 	if res.Code != http.StatusNoContent {
 		return NotFoundError
+	}
+	return nil
+}
+
+func (c *ApiContext) AddTracks(ID string) error {
+	req := requests.Request{
+		Method: http.MethodPut,
+		Uri:    "v1/me/tracks",
+		JsonBody: map[string][]string{
+			"ids": {ID},
+		},
+	}
+	res := requests.Response{}
+
+	err := c.NewRequest(&req, &res)
+	if err != nil {
+		return NotValidTokenError
+	}
+	if res.Code != http.StatusOK {
+		return fmt.Errorf("res=%+v err=%s", res, NotFoundError)
 	}
 	return nil
 }

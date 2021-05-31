@@ -12,6 +12,7 @@ var (
 
 	WebhookToken  = os.Getenv("TELEGRAM_WEBHOOK_TOKEN")
 	TelegramToken = os.Getenv("TELEGRAM_TOKEN")
+	BotName       = getEnv("BOT_NAME", "spotify_share_bot")
 
 	AppSpotifyScope = []string{
 		// Get user history, method: spotify.GetHistory
@@ -28,6 +29,9 @@ var (
 		// Play and sync track
 		"app-remote-control",
 		"streaming",
+
+		// Like song
+		//"user-library-modify",
 	}
 	ClientId     = os.Getenv("CLIENT_ID")
 	ClientSecret = os.Getenv("CLIENT_SECRET")

@@ -3,7 +3,9 @@ package bot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/labstack/gommon/log"
+	"github.com/skar404/spotify_share/global"
 	"math/rand"
 	"strings"
 
@@ -58,7 +60,7 @@ func (b *Bot) CallbackQueryHandler() {
 
 	data := telegram.AnswerCallbackReq{}
 	if err != nil || user.Spotify.Token == nil {
-		data.Url = "t.me/spotify_share_bot?start=LOGIN"
+		data.Url = fmt.Sprintf("t.me/%s?start=LOGIN", global.BotName)
 	}
 
 	_ = telegram.Client.AnswerCallbackQuery(callback.Id, &data)
@@ -95,14 +97,6 @@ func (b *Bot) CallbackQueryHandler() {
 	}
 
 	if splitData[0] == "PLAY" {
-		// Пока не придумал как можно выклюить трек и сохранить контекст который до этого слушал пользоватлеь...
-		// идея:
-		// # возможно стоит потестить api очереди и дествовать по алгоритму:
-		// - получать контекст плеира
-		// - включать трек
-		// - подмешивать контекст (желательно не тераю очередь)
-
-		// FIXME думаю стоит добавить лок, асинхрон может сотворить страшное!!!
 		song, _ := api.GetPlayNow()
 		if err := api.AddQueue(splitData[1]); err != nil {
 			log.Errorf("play AddQueue song error=%s", err)
@@ -114,15 +108,15 @@ func (b *Bot) CallbackQueryHandler() {
 		if song.Item.URI != "" {
 			_ = api.AddQueue(song.Item.URI)
 		}
-		// context := api.AddQueue(song.Item.URI)
-		//if err := api.Play(splitData[1]); err != nil {
-		//	log.Infof("play song error=%s", err)
-		//}
-
-		//_ = api.AddQueue(splitData[1])
 	} else if splitData[0] == "ADD" {
 		if err := api.AddQueue(splitData[1]); err != nil {
 			log.Infof("add queue error=%s", err)
+		}
+	} else if splitData[0] == "LIKE" {
+		su := strings.SplitN(splitData[1], ":", 3)
+
+		if err := api.AddTracks(su[2]); err != nil {
+			log.Infof("error like error=%s", err)
 		}
 	}
 }
@@ -175,6 +169,9 @@ func (b *Bot) InlineQueryHandler() {
 		}
 
 		//tmpList := makePhotoInline(historyList)
+		//if ok, err := strconv.Atoi(b.update.InlineQuery.Query); err == nil {
+		//	historyList = historyList[ok:ok+1]
+		//}
 
 		tmpList := makeAudioInline(historyList)
 
@@ -187,6 +184,7 @@ func (b *Bot) InlineQueryHandler() {
 			"is_personal":         true,
 			"switch_pm_text":      "login in spotify ...",
 			"switch_pm_parameter": "inline_redirect",
+			"cache_time":          1,
 		}
 		err = telegram.Client.AnswerInlineQueryTmp(b.update.InlineQuery.Id, r)
 		log.Info("app")
