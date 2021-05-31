@@ -145,6 +145,10 @@ func makeAudioInline(h []spotify.History) []interface{} {
 						"text":          "Add",
 						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
 					},
+					//{
+					//	"text":          "Like",
+					//	"callback_data": fmt.Sprintf("LIKE::%s", link.URL),
+					//},
 				}},
 			},
 			"thumb_url": link.Img,
