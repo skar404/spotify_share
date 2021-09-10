@@ -1,6 +1,7 @@
 package spotify
 
 import (
+	"errors"
 	"github.com/skar404/spotify_share/requests"
 	"net/http"
 	"net/url"
@@ -26,6 +27,7 @@ type OAuth struct {
 	userToken string
 }
 
+var BadRequest = errors.New("bad request")
 var OAuthClient = InitOAuth()
 
 func InitOAuth() OAuth {
@@ -101,5 +103,10 @@ func (c *OAuth) RefreshToken(token string) (spotify_type.TokenReq, error) {
 		Struct: &r,
 	}
 	err := c.NewRequest(&req, &res)
+
+	if res.Code != http.StatusOK {
+		return r, BadRequest
+	}
+
 	return r, err
 }

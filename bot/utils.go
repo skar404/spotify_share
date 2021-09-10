@@ -125,12 +125,15 @@ func makeAudioInline(h []spotify.History) []interface{} {
 			title = "▶️ ️" + title
 		}
 
+		// FIXME нужно перейти на api song.link, токен на почте
+		finalUrl := strings.Replace(link.URL, "spotify:track:", "", 1)
+
 		tmpList[i] = map[string]interface{}{
 			"type":           "audio",
 			"id":             fmt.Sprintf("%v %v", time.Now().Unix(), RandStringBytes(10)),
 			"audio_url":      link.PreviewURL,
 			"title":          title,
-			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", link.URL),
+			"caption":        fmt.Sprintf("[song link](https://song.link/s/%s)", finalUrl),
 			"parse_mode":     "Markdown",
 			"performer":      link.Artists[0].Name,
 			"audio_duration": 30, // вроде по всем трекам отдает трек 30c, если найду меньше нужно потестит, НО это не критично
@@ -145,6 +148,10 @@ func makeAudioInline(h []spotify.History) []interface{} {
 						"text":          "Add",
 						"callback_data": fmt.Sprintf("ADD::%s", link.URL),
 					},
+					//{
+					//	"text":          "Like",
+					//	"callback_data": fmt.Sprintf("LIKE::%s", link.URL),
+					//},
 				}},
 			},
 			"thumb_url": link.Img,

@@ -2,6 +2,7 @@ package spotify
 
 import (
 	"errors"
+	"github.com/labstack/gommon/log"
 	spotify_type "github.com/skar404/spotify_share/spotify/type"
 )
 
@@ -90,15 +91,25 @@ func (c *ApiContext) GetAllHistory() ([]History, error) {
 	if err != nil && !errors.Is(err, NotFoundError) {
 		return r, err
 	} else if !errors.Is(err, NotFoundError) {
-		r = append(r, makeItem(&now.Item))
+		if now.Item.PreviewURL != "" {
+			r = append(r, makeItem(&now.Item))
+		} else {
+			// FIXME стоит добавить заглушку
+			log.Infof("track not now PreviewURL id=%s", now.Item.ID)
+		}
 	}
 
-	history, err := c.GetHistory()
+	history, err := c.GetHistory(4)
 	if err != nil && !errors.Is(err, NotFoundError) {
 		return r, err
 	} else if !errors.Is(err, NotFoundError) {
 		for i := range history.Items {
-			r = append(r, makeItems(&history.Items[i]))
+			if history.Items[i].Track.PreviewURL != "" {
+				r = append(r, makeItems(&history.Items[i]))
+			} else {
+				// FIXME стоит добавить заглушку
+				log.Infof("track not old PreviewURL id=%s", history.Items[i].Track.ID)
+			}
 		}
 	}
 	return r, nil
