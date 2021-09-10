@@ -34,6 +34,7 @@ type Bot struct {
 }
 
 func Router(update *telegram.Update, handler *handler.Handler) {
+	log.Info("Router init")
 	bot := Bot{
 		context.Background(),
 		update,
@@ -47,6 +48,7 @@ func Router(update *telegram.Update, handler *handler.Handler) {
 	} else if update.CallbackQuery.Id != "" {
 		bot.CallbackQueryHandler()
 	}
+	log.Info("Router done")
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

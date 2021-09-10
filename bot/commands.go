@@ -43,7 +43,7 @@ func (c *CommandContext) Help() {
 Список треков получается из вашего Spotify  
 
 Если у вас есть вопросы, идеи, хотите помочь или нашли баг/опечатку, то напишите: 
- - автор @SaladMen
+ - автор @denis\_malin
  - дискуссия на [GitHub](https://github.com/skar404/spotify_share/discussions/11)
 
 Новости бота @spotify\_share`
