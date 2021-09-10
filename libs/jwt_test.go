@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestCreateJWT(t *testing.T) {
