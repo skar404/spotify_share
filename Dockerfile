@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine as builder
+FROM golang:1.17 as builder
 
 WORKDIR /app
 COPY go.mod .
@@ -6,7 +6,7 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-RUN go build -o bin/spotify_share
+RUN GOOS=linux GOARCH=amd64 go build -o bin/spotify_share
 
 FROM alpine:3.12
 
