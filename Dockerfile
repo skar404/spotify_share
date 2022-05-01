@@ -6,7 +6,7 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -o bin/spotify_share
+RUN go build -o bin/spotify_share
 
 FROM alpine:3.12
 
