@@ -16,7 +16,7 @@ WORKDIR /root/
 
 # use SSL connect in PORD:
 COPY ./mongodb ./mongodb
-COPY --from=builder /app/bin/spotify_share /usr/local/bin/
+COPY --from=builder /app/bin/spotify_share ./
 
 EXPOSE 1323
 
