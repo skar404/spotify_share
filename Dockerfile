@@ -16,7 +16,7 @@ FROM alpine:3.16.2
 RUN apk --no-cache add ca-certificates
 
 # use SSL connect in PORD:
-COPY ./mongodb /root/mongodb
+COPY ./mongodb /srv/mongodb
 COPY --from=builder /app/spotify_share /srv/spotify_share
 
 WORKDIR /srv
