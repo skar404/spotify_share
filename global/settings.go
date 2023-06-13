@@ -37,16 +37,16 @@ var (
 	ClientSecret = os.Getenv("CLIENT_SECRET")
 	RedirectUri  = getEnv("REDIRECT_URI", "http://localhost:1323/spotify")
 
-	DBRs         = getEnv("DB_RS", "")
-	DBName       = getEnv("DB_NAME", "")
-	DBAuthSource = getEnv("DB_AUTH_SOURCE", "")
-	DBHost       = getEnv("DB_HOST", "")
-	DBUser       = getEnv("DB_USER", "")
-	DBPass       = getEnv("DB_PASS", "")
-	DBCACERT     = getEnv("DB_CACERT", "")
-
-	JWTToken     = getEnv("JWT_TOKEN", "TEST_TOKEN")
-	JWTTokenByte = []byte(JWTToken)
+	DBRs                     = getEnv("DB_RS", "")
+	DBName                   = getEnv("DB_NAME", "")
+	DBAuthSource             = getEnv("DB_AUTH_SOURCE", "")
+	DBHost                   = getEnv("DB_HOST", "")
+	DBUser                   = getEnv("DB_USER", "")
+	DBPass                   = getEnv("DB_PASS", "")
+	DBCACERT                 = getEnv("DB_CACERT", "")
+	DBAuthenticationDatabase = getEnv("DBAuthenticationDatabase", "admin")
+	JWTToken                 = getEnv("JWT_TOKEN", "TEST_TOKEN")
+	JWTTokenByte             = []byte(JWTToken)
 )
 
 func getEnv(key, fallback string) string {

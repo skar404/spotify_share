@@ -130,6 +130,10 @@ func constructDBUrl() string {
 	if global.DBCACERT != "" {
 		url = fmt.Sprintf("%s&tls=true&tlsCaFile=%s", url, global.DBCACERT)
 	}
+
+	if global.DBAuthenticationDatabase != "" {
+		url = fmt.Sprintf("%s&authenticationDatabase=%s", url, global.DBAuthenticationDatabase)
+	}
 	return url
 }
 
